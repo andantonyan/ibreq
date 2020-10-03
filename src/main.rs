@@ -26,44 +26,45 @@ struct Response {
 
 fn main() {
   loop {
-    if let Ok(conf) = get_conf() {
-      let start = Instant::now();
-      let config_fetch_interval = Duration::from_millis(conf.config_fetch_interval_in_ms);
-      let call_interval = Duration::from_millis(conf.call_interval_in_ms);
-
-      if conf.state == "START" {
-        'inner:loop {
-          let mut threads = vec![];
+    match get_conf() {
+      Ok(conf) => {
+        let start = Instant::now();
+        let config_fetch_interval = Duration::from_millis(conf.config_fetch_interval_in_ms);
+        let call_interval = Duration::from_millis(conf.call_interval_in_ms);
   
-          for i in 0..conf.thread_count {
-            let conf = conf.clone();
-            let thread = thread::spawn(move || match call(&conf) {
-              Ok(res) => {
-                println!("Thread {}, Response\n{:?}", i, res.headers);
-                thread::sleep(call_interval);
-              }
-              Err(err) => {
-                eprintln!("Thread {}, Unable to call {:?}.", i, err);
-                thread::sleep(call_interval);
-              },
-            });
+        if conf.state == "START" {
+          'inner:loop {
+            let mut threads = vec![];
+    
+            for i in 0..conf.thread_count {
+              let conf = conf.clone();
+              let thread = thread::spawn(move || match call(&conf) {
+                Ok(res) => {
+                  println!("Thread {}, Response\n{:?}", i, res.headers);
+                  thread::sleep(call_interval);
+                }
+                Err(err) => {
+                  eprintln!("Thread {}, Unable to call - {:?}.", i, err);
+                  thread::sleep(call_interval);
+                },
+              });
+    
+              threads.push(thread);
+            }
+    
+            for thread in threads {
+              let _ = thread.join();
+            }
+    
+            if start.elapsed() > config_fetch_interval {
+              break 'inner;
+            }
+          } 
+        }
   
-            threads.push(thread);
-          }
-  
-          for thread in threads {
-            let _ = thread.join();
-          }
-  
-          if start.elapsed() > config_fetch_interval {
-            break 'inner;
-          }
-        } 
-      }
-
-      thread::sleep(config_fetch_interval);
-    } else {
-      continue;
+        thread::sleep(config_fetch_interval);
+      },
+      Err(err) => eprint!("Unable to get config - {:?}.", err),
     }
   }
 }
