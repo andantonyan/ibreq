@@ -12,13 +12,13 @@ struct Config {
   headers: String,
   addr: String,
   content_length: u16,
-  thread_count: u8,
+  thread_count: u16,
   call_interval_in_ms: u64,
   config_fetch_interval_in_ms: u64,
   state: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 struct Response {
   headers: String,
   body: String
