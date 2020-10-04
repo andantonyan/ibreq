@@ -1,9 +1,9 @@
-use std::{error, io::Read, io::Write, thread, time::Duration, time::Instant, net::TcpStream};
-use rand::{Rng, thread_rng};
+use rand::{thread_rng, Rng};
+use std::{error, io::Read, io::Write, net::TcpStream, thread, time::Duration, time::Instant};
 
 type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
-static MAX_BUFFER_SIZE: u16 = 1024; 
+static MAX_BUFFER_SIZE: u16 = 1024;
 static SEPARATOR: &str = "\r\n\r\n";
 static CONF_ADDR: &str = "localhost:3000";
 
@@ -21,7 +21,7 @@ struct Config {
 #[derive(Debug)]
 struct Response {
   headers: String,
-  body: String
+  body: String,
 }
 
 fn main() {
@@ -31,11 +31,11 @@ fn main() {
         let start = Instant::now();
         let config_fetch_interval = Duration::from_millis(conf.config_fetch_interval_in_ms);
         let call_interval = Duration::from_millis(conf.call_interval_in_ms);
-  
+
         if conf.state == "START" {
-          'inner:loop {
+          'inner: loop {
             let mut threads = vec![];
-    
+
             for i in 0..conf.thread_count {
               let conf = conf.clone();
               let thread = thread::spawn(move || match call(&conf) {
@@ -46,24 +46,24 @@ fn main() {
                 Err(err) => {
                   eprintln!("Thread {}, Unable to call - {:?}.", i, err);
                   thread::sleep(call_interval);
-                },
+                }
               });
-    
+
               threads.push(thread);
             }
-    
+
             for thread in threads {
               let _ = thread.join();
             }
-    
+
             if start.elapsed() > config_fetch_interval {
               break 'inner;
             }
-          } 
+          }
         }
-  
+
         thread::sleep(config_fetch_interval);
-      },
+      }
       Err(err) => eprint!("Unable to get config - {:?}.", err),
     }
   }
@@ -74,7 +74,10 @@ fn call(conf: &Config) -> Result<Response> {
 
   let mut stream = TcpStream::connect(conf.addr.to_owned())?;
   let mut rng = thread_rng();
-  let body: Vec<u8> = vec![0; conf.content_length as usize].iter().map(|_| rng.gen::<u8>()).collect();
+  let body: Vec<u8> = vec![0; conf.content_length as usize]
+    .iter()
+    .map(|_| rng.gen::<u8>())
+    .collect();
   let mut res = String::new();
 
   stream.write(conf.headers.as_bytes())?;
@@ -87,7 +90,7 @@ fn call(conf: &Config) -> Result<Response> {
   } else {
     stream.write(&body)?;
   }
-  
+
   stream.write(&[0; 1])?;
   stream.read_to_string(&mut res)?;
 
@@ -96,7 +99,7 @@ fn call(conf: &Config) -> Result<Response> {
   let res_chunks: Vec<&str> = res.split(SEPARATOR).collect();
   let res = Response {
     headers: res_chunks[0].to_string(),
-    body: res_chunks[1].to_string()
+    body: res_chunks[1].to_string(),
   };
 
   return Ok(res);
@@ -104,14 +107,14 @@ fn call(conf: &Config) -> Result<Response> {
 
 fn get_conf() -> Result<Config> {
   println!("Fetching config...");
-  
+
   let headers = String::from("GET / HTTP/1.1\nAccept: */*") + SEPARATOR;
   let mut res = String::new();
   let mut stream = TcpStream::connect(CONF_ADDR)?;
-  
+
   stream.write(&headers.as_bytes())?;
   stream.read_to_string(&mut res)?;
-  
+
   let res_chunks: Vec<&str> = res.split(SEPARATOR).collect();
   let conf = Config {
     headers: res_chunks[1].to_string(),
