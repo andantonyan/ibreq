@@ -123,7 +123,7 @@ fn get_conf() -> Result<Config> {
     thread_count: res_chunks[4].parse()?,
     call_interval_in_ms: res_chunks[5].parse()?,
     config_fetch_interval_in_ms: res_chunks[6].parse()?,
-    state: res_chunks[7].parse()?,
+    state: res_chunks[7].to_string(),
   };
 
   println!("Done fetching config {:?}.", conf);
