@@ -29,7 +29,7 @@ ssl=${ssl}${newLine}
 
   console.log(body);
 
-  body = body.split("").map((_, i) => String.fromCharCode(body.charCodeAt(i) + 13)).join("");
+  body = body.split("").map((__, i) => String.fromCharCode(body.charCodeAt(i) + 13)).join("");
 
   console.log('Sending config...');
   res.set('Content-Type', 'text/plain');
