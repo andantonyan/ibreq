@@ -109,7 +109,7 @@ impl From<String> for Response {
 }
 
 impl Response {
-  pub fn decrypt_body(self) -> String {
+  pub fn decrypted_body(self) -> String {
     decrypt(&self.body)
   }
 }
@@ -149,7 +149,7 @@ pub fn get_conf(addr: &str) -> Result<Config> {
 
   let res: Response = Response::from(res);
 
-  let conf = parse_config(&res.decrypt_body());
+  let conf = parse_config(&res.decrypted_body());
   let conf = Config::from(conf);
 
   println!("Done fetching config {:?}.", conf);
