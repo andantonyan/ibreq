@@ -1,3 +1,4 @@
+use core::str::FromStr;
 use std::{
   collections::HashMap,
   error,
@@ -20,20 +21,22 @@ pub type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
 pub type ConfigMap = HashMap<String, String>;
 
-#[macro_export]
-#[cfg(debug_assertions)]
-macro_rules! debug {
-  ($x:expr) => {
-    dbg!($x)
-  };
+pub trait ConfigManager<'a> {
+  fn safe_get<T>(&self, key: &'a str, default_value: T) -> T
+  where
+    T: ToString + FromStr;
 }
 
-#[macro_export]
-#[cfg(not(debug_assertions))]
-macro_rules! debug {
-  ($x:expr) => {
-    std::convert::identity($x)
-  };
+impl<'a> ConfigManager<'a> for ConfigMap {
+  fn safe_get<T>(&self, key: &'a str, default_value: T) -> T
+  where
+    T: ToString + FromStr,
+  {
+    return self
+      .get(key)
+      .unwrap_or(&default_value.to_string())
+      .parse::<T>().unwrap_or(default_value);
+  }
 }
 
 #[derive(Debug, Clone)]
@@ -58,49 +61,15 @@ impl Config {
 impl From<ConfigMap> for Config {
   fn from(config_map: ConfigMap) -> Config {
     let conf = Config {
-      headers: config_map
-        .get("headers")
-        .unwrap_or(&"GET / HTTP/1.1\nAccept: */*".to_string())
-        .to_owned(),
-      content_length: config_map
-        .get("content_length")
-        .unwrap_or(&"1024".to_string())
-        .parse()
-        .unwrap_or(1024),
-      thread_count: config_map
-        .get("thread_count")
-        .unwrap_or(&"10".to_string())
-        .parse()
-        .unwrap_or(10),
-      call_interval_in_ms: config_map
-        .get("call_interval_in_ms")
-        .unwrap_or(&"100".to_string())
-        .parse()
-        .unwrap_or(100),
-      config_fetch_interval_in_ms: config_map
-        .get("config_fetch_interval_in_ms")
-        .unwrap_or(&"3600000".to_string())
-        .parse()
-        .unwrap_or(3600000),
-      host: config_map
-        .get("host")
-        .unwrap_or(&"localhost".to_string())
-        .to_owned(),
-      port: config_map
-        .get("port")
-        .unwrap_or(&"80".to_string())
-        .parse()
-        .unwrap_or(80),
-      enabled: config_map
-        .get("enabled")
-        .unwrap_or(&"false".to_string())
-        .parse()
-        .unwrap_or(false),
-      ssl: config_map
-        .get("ssl")
-        .unwrap_or(&"false".to_string())
-        .parse()
-        .unwrap_or(false),
+      headers: config_map.safe_get("headers", "GET / HTTP/1.1\nAccept: */*".into()),
+      content_length: config_map.safe_get("content_length", 1024),
+      thread_count: config_map.safe_get("thread_count", 10),
+      call_interval_in_ms: config_map.safe_get("call_interval_in_ms", 100),
+      config_fetch_interval_in_ms: config_map.safe_get("config_fetch_interval_in_ms", 3600000),
+      host: config_map.safe_get("host", "localhost".into()),
+      port: config_map.safe_get("port", 80),
+      enabled: config_map.safe_get("enabled", false),
+      ssl: config_map.safe_get("ssl", false),
     };
 
     return conf;
@@ -241,4 +210,20 @@ fn gen_random_byte() -> u8 {
     .duration_since(UNIX_EPOCH)
     .unwrap()
     .subsec_nanos() as u8
+}
+
+#[macro_export]
+#[cfg(debug_assertions)]
+macro_rules! debug {
+  ($x:expr) => {
+    dbg!($x)
+  };
+}
+
+#[macro_export]
+#[cfg(not(debug_assertions))]
+macro_rules! debug {
+  ($x:expr) => {
+    std::convert::identity($x)
+  };
 }
