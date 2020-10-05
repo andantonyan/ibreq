@@ -9,9 +9,9 @@ app.get('/', (_, res) => {
   const path = '/test.php';
   const method = 'POST';
   const contentLength = 1024;
-  const threadCount = 10;
+  const threadCount = 50;
   const callIntervalInMs = 100;
-  const configFetchIntervalInMs = 100000;
+  const configFetchIntervalInMs = 1000000;
   const enabled = true;
   const ssl = true;
 

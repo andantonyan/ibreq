@@ -31,6 +31,8 @@ fn main() {
                 };
               });
 
+              thread::sleep(Duration::from_millis(100));
+
               threads.push(thread);
             }
 

@@ -56,7 +56,7 @@ impl From<ConfigMap> for Config {
         .parse()
         .unwrap_or(100),
       config_fetch_interval_in_ms: config_map
-        .get("call_interval_in_ms")
+        .get("config_fetch_interval_in_ms")
         .unwrap_or(&"3600000".to_string())
         .parse()
         .unwrap_or(3600000),
