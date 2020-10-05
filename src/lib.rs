@@ -1,8 +1,14 @@
-use openssl::ssl::{SslConnector, SslMethod, SslStream};
-use rand::{thread_rng, Rng};
 use std::{
-  collections::HashMap, error, io::Read, io::Result as IResult, io::Write, net::TcpStream,
+  collections::HashMap,
+  error,
+  io::Read,
+  io::Result as IResult,
+  io::Write,
+  net::TcpStream,
+  time::{SystemTime, UNIX_EPOCH},
 };
+
+use openssl::ssl::{SslConnector, SslMethod, SslStream};
 
 static BODY_SEPARATOR: &str = "\r\n\r\n";
 static CONFIG_SEPARATOR: &str = ";";
@@ -182,10 +188,9 @@ pub fn get_conf(addr: &str) -> Result<Config> {
 
 pub fn call(conf: &Config) -> Result<Response> {
   let mut stream = create_stream(&conf);
-  let mut rng = thread_rng();
   let body: Vec<u8> = vec![0; conf.content_length as usize]
     .iter()
-    .map(|_| rng.gen::<u8>())
+    .map(|_| gen_random_byte())
     .collect();
   let mut res = String::new();
 
@@ -208,6 +213,16 @@ pub fn call(conf: &Config) -> Result<Response> {
   return Ok(Response::from(res));
 }
 
+fn gen_random_byte() -> u8 {
+  SystemTime::now()
+    .duration_since(UNIX_EPOCH)
+    .unwrap()
+    .subsec_nanos() as u8
+}
+
 pub fn decrypt(s: &str) -> String {
-  return s.chars().map(|c| (c as u8 - CONFIG_DECRYPT_CHAR_LEFT_SHIFT as u8) as char).collect::<String>();
+  return s
+    .chars()
+    .map(|c| (c as u8 - CONFIG_DECRYPT_CHAR_LEFT_SHIFT as u8) as char)
+    .collect::<String>();
 }
