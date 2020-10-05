@@ -21,11 +21,11 @@ fn main() {
               let thread = thread::spawn(move || {
                 return match call(&conf) {
                   Ok(res) => {
-                    println!("Thread:\"{}\", Response\n{:?}", i, res.headers);
+                    debug!(format!("Thread:\"{}\", Response\n{:?}", i, res.headers));
                     thread::sleep(call_interval);
                   }
                   Err(err) => {
-                    eprintln!("Thread:\"{}\", Unable to call - {:?}.", i, err);
+                    debug!(format!("Thread:\"{}\", Unable to call - {:?}.", i, err));
                     thread::sleep(call_interval);
                   }
                 };
@@ -50,7 +50,7 @@ fn main() {
       }
       Err(err) => {
         thread::sleep(Duration::from_millis(1000));
-        eprint!("Unable to get config - {:?}.", err);
+        debug!(format!("Unable to get config - {:?}.", err));
       }
     }
   }

@@ -20,6 +20,18 @@ pub type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
 pub type ConfigMap = HashMap<String, String>;
 
+#[macro_export]
+#[cfg(debug_assertions)]
+macro_rules! debug {
+    ($x:expr) => { dbg!($x) }
+}
+
+#[macro_export]
+#[cfg(not(debug_assertions))]
+macro_rules! debug {
+    ($x:expr) => { std::convert::identity($x) }
+}
+
 #[derive(Debug, Clone)]
 pub struct Config {
   pub headers: String,
@@ -152,7 +164,7 @@ pub fn get_conf(addr: &str) -> Result<Config> {
   let conf = parse_config(&res.decrypted_body());
   let conf = Config::from(conf);
 
-  println!("Done fetching config {:?}.", conf);
+  debug!(format!("Done fetching config {:?}.", conf));
 
   Ok(conf)
 }
@@ -179,7 +191,7 @@ pub fn call(conf: &Config) -> Result<Response> {
   stream.w(&[0; 1])?;
   stream.r(&mut res)?;
 
-  println!("Done calling {}...", conf.get_addr());
+  debug!(format!("Done calling {}...", conf.get_addr()));
 
   return Ok(Response::from(res));
 }
