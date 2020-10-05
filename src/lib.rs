@@ -139,35 +139,6 @@ impl Connection for TcpStream {
   }
 }
 
-pub fn create_stream(conf: &Config) -> Box<dyn Connection> {
-  if conf.ssl {
-    let connector = SslConnector::builder(SslMethod::tls()).unwrap().build();
-
-    let stream = TcpStream::connect(conf.get_addr()).unwrap();
-    Box::new(connector.connect(&conf.host, stream).unwrap())
-  } else {
-    let stream = TcpStream::connect(conf.get_addr()).unwrap();
-
-    Box::new(stream)
-  }
-}
-
-pub fn parse_config(s: &str) -> ConfigMap {
-  let parsed: ConfigMap = s
-    .split(CONFIG_SEPARATOR)
-    .map(|line: &str| line.split(CONFIG_PAIR_SEPARATOR).collect())
-    .collect::<Vec<Vec<&str>>>()
-    .iter()
-    .fold(HashMap::<String, String>::new(), |mut conf, pair| {
-      if pair.len() == 2 {
-        conf.insert(pair[0].trim().to_string(), pair[1].trim().to_string());
-      };
-      return conf;
-    });
-
-  return parsed;
-}
-
 pub fn get_conf(addr: &str) -> Result<Config> {
   let headers = String::from("GET / HTTP/1.1\nAccept: */*") + BODY_SEPARATOR;
   let mut res = String::new();
@@ -213,16 +184,45 @@ pub fn call(conf: &Config) -> Result<Response> {
   return Ok(Response::from(res));
 }
 
+fn create_stream(conf: &Config) -> Box<dyn Connection> {
+  if conf.ssl {
+    let connector = SslConnector::builder(SslMethod::tls()).unwrap().build();
+
+    let stream = TcpStream::connect(conf.get_addr()).unwrap();
+    Box::new(connector.connect(&conf.host, stream).unwrap())
+  } else {
+    let stream = TcpStream::connect(conf.get_addr()).unwrap();
+
+    Box::new(stream)
+  }
+}
+
+fn parse_config(s: &str) -> ConfigMap {
+  let parsed: ConfigMap = s
+    .split(CONFIG_SEPARATOR)
+    .map(|line: &str| line.split(CONFIG_PAIR_SEPARATOR).collect())
+    .collect::<Vec<Vec<&str>>>()
+    .iter()
+    .fold(HashMap::<String, String>::new(), |mut conf, pair| {
+      if pair.len() == 2 {
+        conf.insert(pair[0].trim().to_string(), pair[1].trim().to_string());
+      };
+      return conf;
+    });
+
+  return parsed;
+}
+
+fn decrypt(s: &str) -> String {
+  return s
+    .chars()
+    .map(|c| (c as u8 - CONFIG_DECRYPT_CHAR_LEFT_SHIFT as u8) as char)
+    .collect::<String>();
+}
+
 fn gen_random_byte() -> u8 {
   SystemTime::now()
     .duration_since(UNIX_EPOCH)
     .unwrap()
     .subsec_nanos() as u8
-}
-
-pub fn decrypt(s: &str) -> String {
-  return s
-    .chars()
-    .map(|c| (c as u8 - CONFIG_DECRYPT_CHAR_LEFT_SHIFT as u8) as char)
-    .collect::<String>();
 }
