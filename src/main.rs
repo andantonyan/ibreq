@@ -21,11 +21,11 @@ fn main() {
               let thread = thread::spawn(move || {
                 return match call(&conf) {
                   Ok(res) => {
-                    println!("Thread {}, Response\n{:?}", i, res.headers);
+                    println!("Thread:\"{}\", Response\n{:?}", i, res.headers);
                     thread::sleep(call_interval);
                   }
                   Err(err) => {
-                    eprintln!("Thread {}, Unable to call - {:?}.", i, err);
+                    eprintln!("Thread:\"{}\", Unable to call - {:?}.", i, err);
                     thread::sleep(call_interval);
                   }
                 };
