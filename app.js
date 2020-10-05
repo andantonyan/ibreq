@@ -15,7 +15,7 @@ app.get('/', (_, res) => {
   const enabled = true;
   const ssl = true;
 
-  const body = `
+  let body = `
 headers=${method} ${path} HTTP/1.1${newLine}Host: ${host}${newLine}Accept: */*${newLine}Content-length: ${contentLength};
 host=${host};
 port=${port};
@@ -25,7 +25,9 @@ call_interval_in_ms=${callIntervalInMs};
 config_fetch_interval_in_ms=${configFetchIntervalInMs};
 enabled=${enabled};
 ssl=${ssl}${newLine}
-  `
+  `;
+
+  body = body
     .split('')
     .map((__, i) => String.fromCharCode(body.charCodeAt(i) + 13))
     .join('');
