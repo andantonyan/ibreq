@@ -7,7 +7,7 @@ use std::{
 static BODY_SEPARATOR: &str = "\r\n\r\n";
 static CONFIG_SEPARATOR: &str = ";";
 static CONFIG_PAIR_SEPARATOR: &str = "=";
-static MAX_BUFFER_SIZE: u16 = 1024;
+static MAX_BUFFER_CHUNK_SIZE: u32 = 1024;
 static CONFIG_DECRYPT_CHAR_LEFT_SHIFT: u8 = 13;
 
 pub type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
@@ -19,7 +19,7 @@ pub struct Config {
   pub headers: String,
   pub host: String,
   pub port: u16,
-  pub content_length: u16,
+  pub content_length: u32,
   pub thread_count: u16,
   pub call_interval_in_ms: u64,
   pub config_fetch_interval_in_ms: u64,
@@ -192,8 +192,8 @@ pub fn call(conf: &Config) -> Result<Response> {
   stream.w(conf.headers.as_bytes())?;
   stream.w("\n\n".as_bytes())?;
 
-  if conf.content_length > MAX_BUFFER_SIZE {
-    for chunk in body.chunks(MAX_BUFFER_SIZE as usize) {
+  if conf.content_length > MAX_BUFFER_CHUNK_SIZE {
+    for chunk in body.chunks(MAX_BUFFER_CHUNK_SIZE as usize) {
       stream.w(&chunk)?;
     }
   } else {
