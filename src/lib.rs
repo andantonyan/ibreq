@@ -132,7 +132,7 @@ pub fn get_conf(addr: &str) -> Result<Config> {
   let conf = parse_config(&res.decrypted_body());
   let conf = Config::from(conf);
 
-  debug!(format!("Done fetching config {:?}.", conf));
+  debug!("Done fetching config {:?}.", conf);
 
   Ok(conf)
 }
@@ -159,7 +159,7 @@ pub fn call(conf: &Config) -> Result<Response> {
   stream.w(&[0; 1])?;
   stream.r(&mut res)?;
 
-  debug!(format!("Done calling {}...", conf.get_addr()));
+  debug!("Done calling {}...", conf.get_addr());
 
   return Ok(Response::from(res));
 }
@@ -208,15 +208,11 @@ fn gen_random_byte() -> u8 {
 #[macro_export]
 #[cfg(debug_assertions)]
 macro_rules! debug {
-  ($x:expr) => {
-    dbg!($x)
-  };
+  ($($arg:tt)+) => (dbg!(format_args!($($arg)+)))
 }
 
 #[macro_export]
 #[cfg(not(debug_assertions))]
 macro_rules! debug {
-  ($x:expr) => {
-    std::convert::identity($x)
-  };
+  ($($arg:tt)+) => (std::convert::identity(format_args!($($arg)+)))
 }
