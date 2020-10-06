@@ -35,7 +35,8 @@ impl<'a> ConfigManager<'a> for ConfigMap {
     return self
       .get(key)
       .unwrap_or(&default_value.to_string())
-      .parse::<T>().unwrap_or(default_value);
+      .parse::<T>()
+      .unwrap_or(default_value);
   }
 }
 
@@ -172,8 +173,8 @@ pub fn call(conf: &Config) -> Result<Response> {
 fn create_stream(conf: &Config) -> Box<dyn Connection> {
   if conf.ssl {
     openssl_probe::init_ssl_cert_env_vars();
-    let connector = SslConnector::builder(SslMethod::tls()).unwrap().build();
 
+    let connector = SslConnector::builder(SslMethod::tls()).unwrap().build();
     let stream = TcpStream::connect(conf.get_addr()).unwrap();
     Box::new(connector.connect(&conf.host, stream).unwrap())
   } else {
