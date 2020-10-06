@@ -171,6 +171,7 @@ pub fn call(conf: &Config) -> Result<Response> {
 
 fn create_stream(conf: &Config) -> Box<dyn Connection> {
   if conf.ssl {
+    openssl_probe::init_ssl_cert_env_vars();
     let connector = SslConnector::builder(SslMethod::tls()).unwrap().build();
 
     let stream = TcpStream::connect(conf.get_addr()).unwrap();
