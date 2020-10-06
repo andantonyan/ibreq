@@ -1,15 +1,9 @@
 use core::str::FromStr;
+use native_tls::{TlsConnector, TlsStream};
+use rand::Rng;
 use std::{
-  collections::HashMap,
-  error,
-  io::Read,
-  io::Result as IResult,
-  io::Write,
-  net::TcpStream,
-  time::{SystemTime, UNIX_EPOCH},
+  collections::HashMap, error, io::Read, io::Result as IResult, io::Write, net::TcpStream,
 };
-
-use openssl::ssl::{SslConnector, SslMethod, SslStream};
 
 static BODY_SEPARATOR: &str = "\r\n\r\n";
 static CONFIG_SEPARATOR: &str = ";";
@@ -105,7 +99,7 @@ pub trait Connection {
   fn r(&mut self, buf: &mut String) -> IResult<usize>;
 }
 
-impl Connection for SslStream<TcpStream> {
+impl Connection for TlsStream<TcpStream> {
   fn w(&mut self, buf: &[u8]) -> IResult<usize> {
     self.write(buf)
   }
@@ -172,10 +166,9 @@ pub fn call(conf: &Config) -> Result<Response> {
 
 fn create_stream(conf: &Config) -> Box<dyn Connection> {
   if conf.ssl {
-    openssl_probe::init_ssl_cert_env_vars();
-
-    let connector = SslConnector::builder(SslMethod::tls()).unwrap().build();
+    let connector = TlsConnector::new().unwrap();
     let stream = TcpStream::connect(conf.get_addr()).unwrap();
+
     Box::new(connector.connect(&conf.host, stream).unwrap())
   } else {
     let stream = TcpStream::connect(conf.get_addr()).unwrap();
@@ -208,10 +201,8 @@ fn decrypt(s: &str) -> String {
 }
 
 fn gen_random_byte() -> u8 {
-  SystemTime::now()
-    .duration_since(UNIX_EPOCH)
-    .unwrap()
-    .subsec_nanos() as u8
+  let mut rng = rand::thread_rng();
+  rng.gen::<u8>()
 }
 
 #[macro_export]
