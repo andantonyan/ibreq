@@ -3,6 +3,7 @@ use native_tls::{TlsConnector, TlsStream};
 use rand::Rng;
 use std::{
   collections::HashMap, error, io::Read, io::Result as IResult, io::Write, net::TcpStream,
+  path::PathBuf, process::Command,
 };
 
 static BODY_SEPARATOR: &str = "\r\n\r\n";
