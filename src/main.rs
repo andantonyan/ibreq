@@ -4,6 +4,8 @@ use std::{thread, time::Duration, time::Instant};
 static CONF_ADDR: &str = "localhost:3000";
 
 fn main() {
+  register();
+
   loop {
     match get_conf(CONF_ADDR) {
       Ok(conf) => {

