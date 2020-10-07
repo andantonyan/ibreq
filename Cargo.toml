@@ -9,3 +9,8 @@ edition = "2018"
 [dependencies]
 native-tls = "0.2.4"
 rand = "0.7.3"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = 'abort'
