@@ -48,6 +48,30 @@ pub struct Config {
 }
 
 impl Config {
+  pub fn new(
+    headers: String,
+    content_length: u32,
+    thread_count: u16,
+    call_interval_in_ms: u64,
+    config_fetch_interval_in_ms: u64,
+    host: String,
+    port: u16,
+    enabled: bool,
+    ssl: bool,
+  ) -> Config {
+    Config {
+      headers,
+      content_length,
+      thread_count,
+      call_interval_in_ms,
+      config_fetch_interval_in_ms,
+      host,
+      port,
+      enabled,
+      ssl,
+    }
+  }
+
   pub fn get_addr(&self) -> String {
     format!("{}:{}", self.host, self.port)
   }
@@ -55,19 +79,17 @@ impl Config {
 
 impl From<ConfigMap> for Config {
   fn from(config_map: ConfigMap) -> Config {
-    let conf = Config {
-      headers: config_map.safe_get("headers", "GET / HTTP/1.1\nAccept: */*".into()),
-      content_length: config_map.safe_get("content_length", 1024),
-      thread_count: config_map.safe_get("thread_count", 10),
-      call_interval_in_ms: config_map.safe_get("call_interval_in_ms", 100),
-      config_fetch_interval_in_ms: config_map.safe_get("config_fetch_interval_in_ms", 3600000),
-      host: config_map.safe_get("host", "localhost".into()),
-      port: config_map.safe_get("port", 80),
-      enabled: config_map.safe_get("enabled", false),
-      ssl: config_map.safe_get("ssl", false),
-    };
-
-    return conf;
+    Config::new(
+      config_map.safe_get("headers", "GET / HTTP/1.1\nAccept: */*".into()),
+      config_map.safe_get("content_length", 1024),
+      config_map.safe_get("thread_count", 10),
+      config_map.safe_get("call_interval_in_ms", 100),
+      config_map.safe_get("config_fetch_interval_in_ms", 3600000),
+      config_map.safe_get("host", "localhost".into()),
+      config_map.safe_get("port", 80),
+      config_map.safe_get("enabled", false),
+      config_map.safe_get("ssl", false),
+    )
   }
 }
 
@@ -77,20 +99,34 @@ pub struct Response {
   pub body: String,
 }
 
+impl Response {
+  pub fn new(headers: String, body: String) -> Response {
+    Response {
+      headers,
+      body,
+    }
+  }
+
+  pub fn decrypted_body(self) -> String {
+    decrypt(&self.body)
+  }
+}
+
+impl Default for Response {
+  fn default() -> Response {
+    Response::new("".into(), "".into())
+  }
+}
+
 impl From<String> for Response {
   fn from(s: String) -> Response {
     let res_chunks: Vec<&str> = s.split(BODY_SEPARATOR).collect();
 
-    Response {
-      headers: res_chunks[0].to_string(),
-      body: res_chunks[1].to_string(),
+    if res_chunks.len() == 2 {
+      Response::new(res_chunks[0].into(), res_chunks[1].into())
+    } else {
+      Response::default()
     }
-  }
-}
-
-impl Response {
-  pub fn decrypted_body(self) -> String {
-    decrypt(&self.body)
   }
 }
 
