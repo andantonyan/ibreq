@@ -1,4 +1,4 @@
-#![windows_subsystem = "windows"]
+// #![windows_subsystem = "windows"]
 use ibreq::*;
 use std::{process::exit, thread, time::Duration, time::Instant};
 
