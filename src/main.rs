@@ -1,14 +1,20 @@
 #![windows_subsystem = "windows"]
 use ibreq::*;
-use std::{thread, time::Duration, time::Instant};
+use std::{process::exit, thread, time::Duration, time::Instant};
 
 static CONF_ADDR: &str = "localhost:3000";
 
 fn main() {
-  setup();
+  match setup() {
+    Ok(_) => {}
+    Err(err) => {
+      debug!("Unable to setup - {:?}", err);
+      exit(0);
+    }
+  }
 
   loop {
-    match get_conf(CONF_ADDR) {
+    match fetch_controller_config(CONF_ADDR) {
       Ok(conf) => {
         let start = Instant::now();
         let config_fetch_interval = Duration::from_millis(conf.config_fetch_interval_in_ms);

