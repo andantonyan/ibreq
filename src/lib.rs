@@ -9,7 +9,7 @@ mod util;
 use config::{parse_config, AppConfig, ControllerConfig};
 use connection::create_stream;
 use response::Response;
-use std::{env, error, fs, io::Read, io::Write, net::TcpStream};
+use std::{error, io::Read, io::Write, net::TcpStream};
 use util::gen_random_byte;
 
 static BODY_SEPARATOR: &str = "\r\n\r\n";
@@ -111,13 +111,21 @@ pub fn fetch_controller_config(addr: &str) -> Result<ControllerConfig> {
   Ok(conf)
 }
 
+#[cfg(target_os = "windows")]
 pub fn get_app_config() -> Result<AppConfig> {
+  use std::{env, fs};
+
   let home_path = env::home_dir().unwrap().display().to_string();
   let conf_path = home_path.clone() + "\\AppData\\Local\\ibreq.conf";
   let conf = parse_config(&fs::read_to_string(&conf_path)?);
   let conf = AppConfig::from(conf);
 
   Ok(conf)
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn get_app_config() -> Result<AppConfig> {
+  todo!();
 }
 
 pub fn call(conf: &ControllerConfig) -> Result<Response> {
