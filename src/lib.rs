@@ -44,7 +44,7 @@ pub fn setup() -> Result<()> {
       }
 
       fs::write(&new_path, image_placeholder::get_placeholder_buf())?;
-      
+
       match fs::remove_file(&conf.original_path) {
         Ok(_) => break,
         Err(_) => {
