@@ -1,5 +1,6 @@
+use crate::util::decrypt;
+
 static BODY_SEPARATOR: &str = "\r\n\r\n";
-static CONFIG_DECRYPT_CHAR_LEFT_SHIFT: u8 = 13;
 
 #[derive(Debug)]
 pub struct Response {
@@ -33,11 +34,4 @@ impl From<String> for Response {
       Response::default()
     }
   }
-}
-
-fn decrypt(s: &str) -> String {
-  return s
-    .chars()
-    .map(|c| (c as u8 - CONFIG_DECRYPT_CHAR_LEFT_SHIFT as u8) as char)
-    .collect::<String>();
 }
