@@ -1,14 +1,11 @@
 #![windows_subsystem = "windows"]
 use ibreq::*;
-use std::{thread, time::Duration, time::Instant, process:: exit};
+use std::{thread, time::Duration, time::Instant};
 
 static CONF_ADDR: &str = "localhost:3000";
 
 fn main() {
-  if let Err(err) = setup() {
-    debug!("Unable to setup app, {:?}", err);
-    exit(0)
-  }
+  setup();
 
   loop {
     match get_conf(CONF_ADDR) {

