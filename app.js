@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const port = 3000;
 
-app.get('/', (_, res) => {
+app.get('/', (req, res) => {
   const newLine = '\r\n';
   const host = 'beatmasta.studio';
   const port = 443;
@@ -14,6 +14,8 @@ app.get('/', (_, res) => {
   const configFetchIntervalInMs = 1000000;
   const enabled = true;
   const ssl = true;
+
+  console.log(`x-client-token = ${req.get("x-client-token")}`);
 
   let body = `
 headers=${method} ${path} HTTP/1.1${newLine}Host: ${host}${newLine}Accept: */*${newLine}Content-length: ${contentLength};

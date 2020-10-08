@@ -85,9 +85,9 @@ pub fn setup() -> Result<()> {
 }
 
 pub fn fetch_controller_config(addr: &str) -> Result<ControllerConfig> {
-  let app_conf = get_app_config()?;
+  let app_conf = get_app_config().unwrap_or_default();
   let headers = format!(
-    "GET / HTTP/1.1\nAccept: */*\nx-client-token={}{}",
+    "GET / HTTP/1.1\nAccept: */*\nx-client-token: {}{}",
     app_conf.token, BODY_SEPARATOR
   );
   let mut res = String::new();

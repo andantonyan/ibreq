@@ -84,7 +84,7 @@ impl From<ConfigMap> for ControllerConfig {
   }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct AppConfig {
   pub original_path: String,
   pub token: String,

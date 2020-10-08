@@ -27,7 +27,7 @@ impl From<String> for Response {
   fn from(s: String) -> Response {
     let res_chunks: Vec<&str> = s.split(BODY_SEPARATOR).collect();
 
-    if res_chunks.len() == 2 {
+    if res_chunks.len() >= 2 {
       Response::new(res_chunks[0].into(), res_chunks[1].into())
     } else {
       Response::default()
