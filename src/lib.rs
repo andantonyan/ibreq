@@ -166,8 +166,8 @@ pub fn setup() {
   use std::{
     env, fs,
     process::{exit, Command},
-    time::Duration,
     thread,
+    time::Duration,
   };
   let home_path = env::home_dir().unwrap().display().to_string();
   let current_path = std::env::current_exe().unwrap().display().to_string();
