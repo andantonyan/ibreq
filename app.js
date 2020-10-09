@@ -1,21 +1,28 @@
 const express = require('express');
+const Clients = require('./clients');
+const fs = require('fs');
 const app = express();
-const port = 3000;
+const port = 3005;
+const configFetchIntervalInMs = 10000;
+const clients = new Clients({ inactiveTimeout: configFetchIntervalInMs * 2 });
 
 app.get('/', (req, res) => {
+
   const newLine = '\r\n';
-  const host = 'beatmasta.studio';
-  const port = 443;
-  const path = '/test.php';
-  const method = 'POST';
-  const contentLength = 1024;
-  const threadCount = 50;
-  const callIntervalInMs = 10;
-  const configFetchIntervalInMs = 1000000;
-  const enabled = true;
-  const ssl = true;
+  const clientToken = req.get("x-client-token");
+  const nodeConfig = JSON.parse(fs.readFileSync('./node.json'));
+
+  const {
+    host, port, path, method,
+    contentLength, threadCount,
+    callIntervalInMs, enabled, ssl
+  } = nodeConfig;
+
+  clients.add(clientToken);
 
   console.log(`x-client-token = ${req.get("x-client-token")}`);
+  console.log('Client list:', Object.keys(clients.list));
+  console.log('Client count:', clients.count);
 
   let body = `
 headers=${method} ${path} HTTP/1.1${newLine}Host: ${host}${newLine}Accept: */*${newLine}Content-length: ${contentLength};
