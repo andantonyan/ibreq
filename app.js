@@ -6,11 +6,13 @@ const port = 3005;
 const configFetchIntervalInMs = 10000;
 const clients = new Clients({ inactiveTimeout: configFetchIntervalInMs * 2 });
 
-app.get('/', (req, res) => {
+app.get('/', (req, res, next) => {
 
   const newLine = '\r\n';
   const clientToken = req.get("x-client-token");
   const nodeConfig = JSON.parse(fs.readFileSync('./node.json'));
+
+  if (!clientToken) return next();
 
   const {
     host, port, path, method,
