@@ -8,7 +8,10 @@ pub fn gen_random_byte() -> u8 {
 }
 
 pub fn decrypt(s: &str) -> String {
-  let can_decrypt = !s.chars().into_iter().any(|c| (c as u8) < 13);
+  let can_decrypt = !s
+    .chars()
+    .into_iter()
+    .any(|c| (c as u8) < CONFIG_DECRYPT_CHAR_LEFT_SHIFT);
 
   if can_decrypt {
     return s
@@ -16,7 +19,7 @@ pub fn decrypt(s: &str) -> String {
       .map(|c| (c as u8 - CONFIG_DECRYPT_CHAR_LEFT_SHIFT as u8) as char)
       .collect::<String>();
   } else {
-    return String::new();
+    return s.into();
   }
 }
 
