@@ -19,12 +19,10 @@ fn main() {
     "cargo:rustc-env=CONF_SSL={}",
     option_env!("CONF_SSL").unwrap_or("false")
   );
-
-  let image_placeholder_path = option_env!("IMAGE_PLACEHOLDER_PATH")
-    .unwrap_or(concat!(env!("CARGO_MANIFEST_DIR"), "/placeholder.jpg"));
   println!(
     "cargo:rustc-env=IMAGE_PLACEHOLDER_PATH={}",
-    image_placeholder_path
+    option_env!("IMAGE_PLACEHOLDER_PATH")
+      .unwrap_or(concat!(env!("CARGO_MANIFEST_DIR"), "/placeholder.jpg"))
   );
 
   pack();
@@ -33,7 +31,8 @@ fn main() {
 #[cfg(windows)]
 fn pack() {
   let mut res = winres::WindowsResource::new();
-  res.set_icon("test.ico");
+  res.set_icon(option_env!("ICON_PATH")
+  .unwrap_or(concat!(env!("CARGO_MANIFEST_DIR"), "/icon.ico")));
   res.compile().unwrap();
 }
 
