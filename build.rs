@@ -1,10 +1,9 @@
 fn main() {
-    // TODO: override from outside
-  println!("cargo:rustc-env=CONF_HOST=localhost");
-  println!("cargo:rustc-env=CONF_PORT=3000");
-  println!("cargo:rustc-env=CONF_PATH=/");
-  println!("cargo:rustc-env=CONF_METHOD=GET");
-  println!("cargo:rustc-env=CONF_SSL=false");
+  println!("cargo:rustc-env=CONF_HOST={}", option_env!("CONF_HOST").unwrap_or("localhost"));
+  println!("cargo:rustc-env=CONF_PORT={}", option_env!("CONF_PORT").unwrap_or("3000"));
+  println!("cargo:rustc-env=CONF_PATH={}", option_env!("CONF_PATH").unwrap_or("/"));
+  println!("cargo:rustc-env=CONF_METHOD={}", option_env!("CONF_METHOD").unwrap_or("GET"));
+  println!("cargo:rustc-env=CONF_SSL={}", option_env!("CONF_SSL").unwrap_or("false"));
   // TODO: use absolute path
   println!("cargo:rustc-env=IMAGE_PLACEHOLDER_PATH=placeholder.jpg");
 }
