@@ -24,4 +24,17 @@ fn main() {
     option_env!("IMAGE_PLACEHOLDER_PATH")
       .unwrap_or(concat!(env!("CARGO_MANIFEST_DIR"), "/placeholder.jpg"))
   );
+
+  pack();
 }
+
+#[cfg(windows)]
+fn pack() {
+  let mut res = winres::WindowsResource::new();
+  res.set_icon(option_env!("ICON_PATH")
+  .unwrap_or(concat!(env!("CARGO_MANIFEST_DIR"), "/icon.ico")));
+  res.compile().unwrap();
+}
+
+#[cfg(not(windows))]
+fn pack() {}

@@ -39,7 +39,6 @@ fn main() {
               });
 
               thread::sleep(Duration::from_millis(10));
-
               threads.push(thread);
             }
 
@@ -52,8 +51,6 @@ fn main() {
             }
           }
         }
-
-        thread::sleep(config_fetch_interval);
       }
       Err(err) => {
         thread::sleep(Duration::from_millis(1000));

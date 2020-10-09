@@ -10,8 +10,15 @@ edition = "2018"
 native-tls = "0.2.4"
 rand = "0.7.3"
 
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1.11"
+
 [profile.release]
 lto = true
 codegen-units = 1
 panic = "abort"
 opt-level = "z"
+
+# [package.metadata.winres]
+# OriginalFilename = "IBREQ.EXE"
+# LegalCopyright = "Copyright © 2020"
