@@ -1,6 +1,6 @@
 use crate::{config::ConfigMap, constant::*};
 use rand::Rng;
-use std::{collections::HashMap, fs};
+use std::collections::HashMap;
 
 pub fn gen_random_byte() -> u8 {
   let mut rng = rand::thread_rng();
@@ -28,11 +28,4 @@ pub fn parse_config(s: &str) -> ConfigMap {
     });
 
   return parsed;
-}
-
-pub fn get_placeholder_buf() -> Vec<u8> {
-  let path: &'static str =
-    option_env!("IMAGE_PLACEHOLDER_PATH").unwrap_or(DEFAULT_PLACEHOLDER_PATH);
-
-  return fs::read(path).unwrap();
 }

