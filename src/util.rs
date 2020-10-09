@@ -1,7 +1,4 @@
-use crate::{
-  config::ConfigMap, CONFIG_DECRYPT_CHAR_LEFT_SHIFT, CONFIG_PAIR_SEPARATOR, CONFIG_SEPARATOR,
-  DEFAULT_PLACEHOLDER_PATH,
-};
+use crate::{config::ConfigMap, constant::*};
 use rand::Rng;
 use std::{collections::HashMap, fs};
 

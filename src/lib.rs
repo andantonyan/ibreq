@@ -1,28 +1,17 @@
 #![allow(dead_code)]
 pub mod config;
 pub mod connection;
+pub mod constant;
 pub mod macros;
 pub mod response;
 pub mod util;
 
 use config::{AppConfig, ControllerConfig};
 use connection::create_stream;
+use constant::*;
 use response::Response;
 use std::error;
 use util::{gen_random_byte, parse_config};
-
-static CONF_DEFAULT_HOST: &str = "localhost";
-static CONF_DEFAULT_PORT: u16 = 3000;
-static CONF_DEFAULT_PATH: &str = "/";
-static CONF_DEFAULT_METHOD: &str = "GET";
-static CONF_DEFAULT_SSL: bool = false;
-static DEFAULT_PLACEHOLDER_PATH: &str = "placeholder.jpg";
-
-static BODY_SEPARATOR: &str = "\r\n\r\n";
-static MAX_BUFFER_CHUNK_SIZE: u32 = 1024;
-static CONFIG_DECRYPT_CHAR_LEFT_SHIFT: u8 = 13;
-static CONFIG_SEPARATOR: &str = ";";
-static CONFIG_PAIR_SEPARATOR: &str = "=";
 
 pub type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 

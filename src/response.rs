@@ -1,5 +1,4 @@
-use crate::util::decrypt;
-use crate::BODY_SEPARATOR;
+use crate::{constant::*, util::decrypt};
 
 #[derive(Debug)]
 pub struct Response {
