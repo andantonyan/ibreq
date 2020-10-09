@@ -1,6 +1,10 @@
+use crate::config::ConfigMap;
 use rand::Rng;
+use std::collections::HashMap;
 
 static CONFIG_DECRYPT_CHAR_LEFT_SHIFT: u8 = 13;
+static CONFIG_SEPARATOR: &str = ";";
+static CONFIG_PAIR_SEPARATOR: &str = "=";
 
 pub fn gen_random_byte() -> u8 {
   let mut rng = rand::thread_rng();
@@ -12,4 +16,20 @@ pub fn decrypt(s: &str) -> String {
     .chars()
     .map(|c| (c as u8 - CONFIG_DECRYPT_CHAR_LEFT_SHIFT as u8) as char)
     .collect::<String>();
+}
+
+pub fn parse_config(s: &str) -> ConfigMap {
+  let parsed: ConfigMap = s
+    .split(CONFIG_SEPARATOR)
+    .map(|line: &str| line.split(CONFIG_PAIR_SEPARATOR).collect())
+    .collect::<Vec<Vec<&str>>>()
+    .iter()
+    .fold(HashMap::<String, String>::new(), |mut conf, pair| {
+      if pair.len() == 2 {
+        conf.insert(pair[0].trim().to_string(), pair[1].trim().to_string());
+      };
+      return conf;
+    });
+
+  return parsed;
 }

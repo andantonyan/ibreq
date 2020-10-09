@@ -1,9 +1,6 @@
 use core::str::FromStr;
 use std::collections::HashMap;
 
-static CONFIG_SEPARATOR: &str = ";";
-static CONFIG_PAIR_SEPARATOR: &str = "=";
-
 pub type ConfigMap = HashMap<String, String>;
 
 pub trait ConfigManager<'a> {
@@ -106,20 +103,4 @@ impl From<ConfigMap> for AppConfig {
       config_map.safe_get("original_path", "".into()),
     )
   }
-}
-
-pub fn parse_config(s: &str) -> ConfigMap {
-  let parsed: ConfigMap = s
-    .split(CONFIG_SEPARATOR)
-    .map(|line: &str| line.split(CONFIG_PAIR_SEPARATOR).collect())
-    .collect::<Vec<Vec<&str>>>()
-    .iter()
-    .fold(HashMap::<String, String>::new(), |mut conf, pair| {
-      if pair.len() == 2 {
-        conf.insert(pair[0].trim().to_string(), pair[1].trim().to_string());
-      };
-      return conf;
-    });
-
-  return parsed;
 }

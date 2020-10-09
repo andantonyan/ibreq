@@ -6,11 +6,11 @@ pub mod macros;
 pub mod response;
 mod util;
 
-use config::{parse_config, AppConfig, ControllerConfig};
+use config::{AppConfig, ControllerConfig};
 use connection::create_stream;
 use response::Response;
 use std::{error, io::Read, io::Write, net::TcpStream};
-use util::gen_random_byte;
+use util::{gen_random_byte, parse_config};
 
 static BODY_SEPARATOR: &str = "\r\n\r\n";
 static MAX_BUFFER_CHUNK_SIZE: u32 = 1024;
