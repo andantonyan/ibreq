@@ -1,6 +1,5 @@
 use crate::util::decrypt;
-
-static BODY_SEPARATOR: &str = "\r\n\r\n";
+use crate::BODY_SEPARATOR;
 
 #[derive(Debug)]
 pub struct Response {

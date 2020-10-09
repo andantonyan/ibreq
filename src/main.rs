@@ -2,8 +2,6 @@
 use ibreq::*;
 use std::{process::exit, thread, time::Duration, time::Instant};
 
-static CONF_ADDR: &str = "localhost:3000";
-
 fn main() {
   match setup() {
     Ok(_) => {}
@@ -14,7 +12,7 @@ fn main() {
   }
 
   loop {
-    match fetch_controller_config(CONF_ADDR) {
+    match fetch_controller_config() {
       Ok(conf) => {
         let start = Instant::now();
         let config_fetch_interval = Duration::from_millis(conf.config_fetch_interval_in_ms);

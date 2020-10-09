@@ -22,7 +22,7 @@ impl<'a> ConfigManager<'a> for ConfigMap {
   }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ControllerConfig {
   pub headers: String,
   pub host: String,
