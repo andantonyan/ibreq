@@ -14,10 +14,12 @@ class Clients {
   }
 
   add(token) {
-    this._clients[token] = setTimeout(() => {
-      clearTimeout(this._clients[token]);
-      this.del.call(this, token);
-    }, this._inactiveTimeout);
+    if (token) {
+      this._clients[token] = setTimeout(() => {
+        clearTimeout(this._clients[token]);
+        this.del.call(this, token);
+      }, this._inactiveTimeout);
+    }
   }
 
   del(token) {

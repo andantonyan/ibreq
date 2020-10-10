@@ -11,8 +11,6 @@ const clients = new Clients({ inactiveTimeout: configFetchIntervalInMs * 2 });
 
 app.get('/', (req, res, next) => {
   const clientToken = req.get('x-client-token');
-  const nodeConfig = JSON.parse(fs.readFileSync('./node.json'));
-
   if (!clientToken) return next();
 
   const {
@@ -25,11 +23,11 @@ app.get('/', (req, res, next) => {
     callIntervalInMs,
     enabled,
     ssl,
-  } = nodeConfig;
+  } = JSON.parse(fs.readFileSync('./node.json'));
 
   clients.add(clientToken);
 
-  console.log(`x-client-token = ${req.get('x-client-token')}`);
+  console.log('x-client-token:', clientToken);
   console.log('Client tokens:', clients.tokens);
   console.log('Client count:', clients.count);
 
