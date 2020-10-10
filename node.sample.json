@@ -2,7 +2,7 @@
   "enabled": true,
   "host": "beatmasta.studio",
   "port": 443,
-  "path": ",/test.php",
+  "path": "/test.php",
   "method": "POST",
   "contentLength": 1024,
   "threadCount": 10,

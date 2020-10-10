@@ -68,12 +68,12 @@ impl ControllerConfig {
 impl From<ConfigMap> for ControllerConfig {
   fn from(config_map: ConfigMap) -> ControllerConfig {
     ControllerConfig::new(
-      config_map.safe_get("headers", "GET / HTTP/1.1\nAccept: */*".into()),
+      config_map.safe_get("headers", "".into()),
       config_map.safe_get("content_length", 1024),
       config_map.safe_get("thread_count", 10),
       config_map.safe_get("call_interval_in_ms", 100),
       config_map.safe_get("config_fetch_interval_in_ms", 3600000),
-      config_map.safe_get("host", "localhost".into()),
+      config_map.safe_get("host", "".into()),
       config_map.safe_get("port", 80),
       config_map.safe_get("enabled", false),
       config_map.safe_get("ssl", false),
@@ -83,24 +83,17 @@ impl From<ConfigMap> for ControllerConfig {
 
 #[derive(Debug, Clone, Default)]
 pub struct AppConfig {
-  pub original_path: String,
   pub token: String,
 }
 
 impl AppConfig {
-  pub fn new(token: String, original_path: String) -> AppConfig {
-    AppConfig {
-      token,
-      original_path,
-    }
+  pub fn new(token: String) -> AppConfig {
+    AppConfig { token }
   }
 }
 
 impl From<ConfigMap> for AppConfig {
   fn from(config_map: ConfigMap) -> AppConfig {
-    AppConfig::new(
-      config_map.safe_get("token", "".into()),
-      config_map.safe_get("original_path", "".into()),
-    )
+    AppConfig::new(config_map.safe_get("token", "".into()))
   }
 }

@@ -5,6 +5,9 @@ pub const CONF_METHOD: &str = env!("CONF_METHOD");
 pub const CONF_SSL: &str = env!("CONF_SSL");
 pub const PLACEHOLDER_BUF: &'static [u8] = include_bytes!(env!("IMAGE_PLACEHOLDER_PATH"));
 
+pub const CR: &str = "\r";
+pub const FL: &str = "\n";
+pub const CRLF: &str = "\r\n";
 pub const BODY_SEPARATOR: &str = "\r\n\r\n";
 pub const MAX_BUFFER_CHUNK_SIZE: u32 = 1024;
 pub const CONFIG_DECRYPT_CHAR_LEFT_SHIFT: u8 = 13;

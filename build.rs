@@ -31,9 +31,11 @@ fn main() {
 #[cfg(windows)]
 fn pack() {
   let mut res = winres::WindowsResource::new();
-  res.set_icon(option_env!("ICON_PATH")
-  .unwrap_or(concat!(env!("CARGO_MANIFEST_DIR"), "/icon.ico")));
-  res.compile().unwrap();
+
+  res
+    .set_icon(option_env!("ICON_PATH").unwrap_or(concat!(env!("CARGO_MANIFEST_DIR"), "/icon.ico")))
+    .compile()
+    .unwrap();
 }
 
 #[cfg(not(windows))]

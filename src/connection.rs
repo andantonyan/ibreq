@@ -1,28 +1,46 @@
 use crate::Result;
 use native_tls::{TlsConnector, TlsStream};
-use std::{io::Read, io::Result as IResult, io::Write, net::TcpStream};
-pub trait Connection {
-  fn w(&mut self, buf: &[u8]) -> IResult<usize>;
-  fn r(&mut self, buf: &mut String) -> IResult<usize>;
+use std::{
+  fmt::Debug,
+  io::Result as IResult,
+  io::Write,
+  io::{BufRead, BufReader, Read},
+  net::TcpStream,
+};
+pub trait Connection: Read + Write + Debug {
+  fn write_buf(&mut self, buf: &[u8]) -> IResult<usize>;
+  fn read_buf(&mut self, buf: &mut [u8]) -> IResult<usize>;
+
+  fn get_res(&mut self) -> IResult<String> {
+    let mut reader = BufReader::new(self);
+    // TODO: Read current current data in the TcpStream
+    let received: Vec<u8> = reader.fill_buf()?.to_vec();
+
+    // TODO: Do some processing or validation to make sure the whole line is present?
+    // TODO: Mark the bytes read as consumed so the buffer will not return them in a subsequent read
+    reader.consume(received.len());
+
+    Ok(String::from_utf8(received).unwrap_or_default())
+  }
 }
 
 impl Connection for TlsStream<TcpStream> {
-  fn w(&mut self, buf: &[u8]) -> IResult<usize> {
+  fn write_buf(&mut self, buf: &[u8]) -> IResult<usize> {
     self.write(buf)
   }
 
-  fn r(&mut self, buf: &mut String) -> IResult<usize> {
-    self.read_to_string(buf)
+  fn read_buf(&mut self, buf: &mut [u8]) -> IResult<usize> {
+    self.read(buf)
   }
 }
 
 impl Connection for TcpStream {
-  fn w(&mut self, buf: &[u8]) -> IResult<usize> {
+  fn write_buf(&mut self, buf: &[u8]) -> IResult<usize> {
     self.write(buf)
   }
 
-  fn r(&mut self, buf: &mut String) -> IResult<usize> {
-    self.read_to_string(buf)
+  fn read_buf(&mut self, buf: &mut [u8]) -> IResult<usize> {
+    self.read(buf)
   }
 }
 
