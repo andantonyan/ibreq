@@ -7,7 +7,7 @@ class Clients {
     }
 
     get count() {
-        return this._count;
+        return Object.keys(this._clients).length;
     }
 
     get list() {
@@ -16,13 +16,10 @@ class Clients {
 
     add(token) {
 
-        if (!this.contains(token)) this._count++;
-
         this._clients[token] = setTimeout(() => {
 
             clearTimeout(this._clients[token]);
             this.del.call(this, token);
-            this._count--;
 
         }, this._inactiveTimeout);
 
