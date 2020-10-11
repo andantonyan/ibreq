@@ -1,4 +1,5 @@
 const express = require('express');
+const bodyParser = require('body-parser');
 const fs = require('fs');
 
 const Clients = require('./clients');
@@ -9,12 +10,15 @@ const app = express();
 const configFetchIntervalInMs = 10000;
 const clients = new Clients({ inactiveTimeout: configFetchIntervalInMs * 2 });
 
+app.use(bodyParser.json());
+
 app.get('/', (req, res, next) => {
   const clientToken = req.get('x-client-token');
   if (!clientToken) return next();
 
   const {
     host,
+    body: reqBody = '',
     port,
     path,
     method,
@@ -33,6 +37,7 @@ app.get('/', (req, res, next) => {
 
   let body = `
 headers=${method} ${path} HTTP/1.1${CRLF}Host: ${host}${CRLF}Accept: */*${CRLF}Content-length: ${contentLength};
+body=${reqBody};
 host=${host};
 port=${port};
 content_length=${contentLength};
@@ -55,6 +60,7 @@ ssl=${ssl}${CRLF}
 
 app.post('/', (req, res) => {
   console.log('Receiving data with len: ', req.socket.bytesRead);
+  console.log('Body: ', req.body);
   res.send('Hello World!');
 });
 

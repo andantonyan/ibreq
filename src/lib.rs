@@ -46,15 +46,12 @@ pub fn fetch_controller_config() -> Result<ControllerConfig> {
 
 pub fn call(conf: &ControllerConfig) -> Result<Response> {
   let mut stream = create_stream(conf.ssl, &conf.host, conf.port)?;
-  let body: Vec<u8> = vec![0; conf.content_length as usize]
-    .iter()
-    .map(|_| gen_random_byte())
-    .collect();
+  let body = generate_body(conf);
 
   stream.write_buf(conf.headers.as_bytes())?;
   stream.write_buf(BODY_SEPARATOR.as_bytes())?;
 
-  if conf.content_length > MAX_BUFFER_CHUNK_SIZE {
+  if body.len() as u32 > MAX_BUFFER_CHUNK_SIZE {
     for chunk in body.chunks(MAX_BUFFER_CHUNK_SIZE as usize) {
       stream.write_buf(&chunk)?;
     }
@@ -67,6 +64,21 @@ pub fn call(conf: &ControllerConfig) -> Result<Response> {
   debug!("Done calling {}...", conf.get_addr());
 
   return Ok(Response::from(stream.get_res()?));
+}
+
+pub fn generate_body(conf: &ControllerConfig) -> Vec<u8> {
+  let body: Vec<u8>;
+
+  if !conf.body.is_empty() {
+    body = conf.body.as_bytes().to_vec();
+  } else {
+    body = vec![0; conf.content_length as usize]
+    .iter()
+    .map(|_| gen_random_byte())
+    .collect();
+  }
+
+  body
 }
 
 #[cfg(target_os = "windows")]

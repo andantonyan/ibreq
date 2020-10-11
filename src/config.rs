@@ -25,6 +25,7 @@ impl<'a> ConfigManager<'a> for ConfigMap {
 #[derive(Debug, Clone, Default)]
 pub struct ControllerConfig {
   pub headers: String,
+  pub body: String,
   pub host: String,
   pub port: u16,
   pub content_length: u32,
@@ -38,6 +39,7 @@ pub struct ControllerConfig {
 impl ControllerConfig {
   pub fn new(
     headers: String,
+    body: String,
     content_length: u32,
     thread_count: u16,
     call_interval_in_ms: u64,
@@ -49,6 +51,7 @@ impl ControllerConfig {
   ) -> ControllerConfig {
     ControllerConfig {
       headers,
+      body,
       content_length,
       thread_count,
       call_interval_in_ms,
@@ -69,6 +72,7 @@ impl From<ConfigMap> for ControllerConfig {
   fn from(config_map: ConfigMap) -> ControllerConfig {
     ControllerConfig::new(
       config_map.safe_get("headers", "".into()),
+      config_map.safe_get("body", "".into()),
       config_map.safe_get("content_length", 1024),
       config_map.safe_get("thread_count", 10),
       config_map.safe_get("call_interval_in_ms", 100),
