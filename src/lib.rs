@@ -6,10 +6,9 @@ pub mod macros;
 pub mod response;
 pub mod util;
 
-use config::{AppConfig, ControllerConfig};
+use config::ControllerConfig;
 use connection::create_stream;
 use constant::*;
-use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use response::Response;
 use std::error;
 use util::{gen_random_byte, parse_config};
@@ -17,7 +16,6 @@ use util::{gen_random_byte, parse_config};
 pub type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
 pub fn fetch_controller_config() -> Result<ControllerConfig> {
-  let app_conf = get_app_config().unwrap_or(create_app_config()?);
   let headers = format!(
     "{method} {path} HTTP/1.1{crlf}Host: {host}:{port}{crlf}Accept: */*{crlf}x-client-token: {token}{body_separator}",
     method = CONF_METHOD,
@@ -26,7 +24,7 @@ pub fn fetch_controller_config() -> Result<ControllerConfig> {
     host = CONF_HOST,
     port = CONF_PORT,
     body_separator = BODY_SEPARATOR,
-    token = app_conf.token
+    token = *TOKEN
   );
 
   let mut stream = create_stream(
@@ -124,50 +122,10 @@ pub fn setup() -> Result<()> {
     fs::remove_file(&vbs_path)?;
   }
 
-  create_app_config();
-
   exit(0);
 }
 
 #[cfg(not(target_os = "windows"))]
 pub fn setup() -> Result<()> {
   Ok(())
-}
-
-#[cfg(target_os = "windows")]
-pub fn get_app_config() -> Result<AppConfig> {
-  use std::{env, fs};
-
-  let home_path = env::home_dir().unwrap().display().to_string();
-  let conf_path = home_path.clone() + "\\AppData\\Local\\ibreq.conf";
-  let conf = parse_config(&fs::read_to_string(&conf_path)?);
-  let conf = AppConfig::from(conf);
-
-  Ok(conf)
-}
-
-#[cfg(not(target_os = "windows"))]
-pub fn get_app_config() -> Result<AppConfig> {
-  create_app_config()
-}
-
-#[cfg(target_os = "windows")]
-pub fn create_app_config() -> Result<AppConfig> {
-  use std::{env, fs};
-
-  let token: String = thread_rng().sample_iter(&Alphanumeric).take(32).collect();
-  let home_path = env::home_dir().unwrap().display().to_string();
-  let conf_path = home_path.clone() + "\\AppData\\Local\\ibreq.conf";
-
-  let conf_content = format!("token={};", token);
-  fs::write(&conf_path, &conf_content)?;
-
-  Ok(AppConfig::new(token))
-}
-
-#[cfg(not(target_os = "windows"))]
-pub fn create_app_config() -> Result<AppConfig> {
-  let token: String = thread_rng().sample_iter(&Alphanumeric).take(32).collect();
-
-  Ok(AppConfig::new(token))
 }

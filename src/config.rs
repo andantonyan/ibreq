@@ -82,18 +82,16 @@ impl From<ConfigMap> for ControllerConfig {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct AppConfig {
-  pub token: String,
-}
+pub struct AppConfig {}
 
 impl AppConfig {
-  pub fn new(token: String) -> AppConfig {
-    AppConfig { token }
+  pub fn new() -> AppConfig {
+    AppConfig {}
   }
 }
 
 impl From<ConfigMap> for AppConfig {
-  fn from(config_map: ConfigMap) -> AppConfig {
-    AppConfig::new(config_map.safe_get("token", "".into()))
+  fn from(_: ConfigMap) -> AppConfig {
+    AppConfig::new()
   }
 }

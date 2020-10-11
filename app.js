@@ -3,7 +3,7 @@ const fs = require('fs');
 
 const Clients = require('./clients');
 
-const PORT = process.env.PORT || 3005;
+const PORT = process.env.PORT || 3000;
 const CRLF = '\r\n';
 const app = express();
 const configFetchIntervalInMs = 10000;

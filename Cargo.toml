@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 native-tls = "0.2.4"
 rand = "0.7.3"
+lazy_static = "1.4.0"
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1.11"
