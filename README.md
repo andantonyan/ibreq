@@ -28,7 +28,8 @@ ICON_PATH="icon.ico"
   "body": "",
   "threadCount": 10,
   "callIntervalInMs": 10,
-  "ssl": true
+  "configFetchIntervalInMs": 10000,
+  "ssl": false
 }
 ```
 
