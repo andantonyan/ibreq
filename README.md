@@ -1,6 +1,6 @@
 # IBREQ
 
-[![Build](https://github.com/andantonyan/ibreq/workflows/Rust/badge.svg)](https://github.com/andantonyan/ibreq/actions)
+[![Rust](https://github.com/andantonyan/ibreq/workflows/Rust/badge.svg)](https://github.com/andantonyan/ibreq/actions)
 
 ### ENV variables
 
