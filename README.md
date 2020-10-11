@@ -1,15 +1,20 @@
-## IBREQ
+# IBREQ
 
-#### ENV variables
-1. CONF_HOST="localhost"
-2. CONF_PORT=3000
-3. CONF_PATH="/"
-4. CONF_METHOD="GET"
-5. CONF_SSL=false
-6. IMAGE_PLACEHOLDER_PATH="placeholder.jpg"
-7. ICON_PATH="icon.ico"
+[![Build](https://github.com/andantonyan/ibreq/workflows/Rust/badge.svg)](https://github.com/andantonyan/ibreq/actions)
 
-#### Toolkit
+### ENV variables
+
+```bash
+CONF_HOST="localhost"
+CONF_PORT=3000
+CONF_PATH="/"
+CONF_METHOD="GET"
+CONF_SSL=false
+IMAGE_PLACEHOLDER_PATH="placeholder.jpg"
+ICON_PATH="icon.ico"
+```
+
+### Toolkit
 
 Before we begin you need to have the approptiate tools installed.
  - `rc.exe` from the [Windows SDK]
