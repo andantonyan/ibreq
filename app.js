@@ -6,6 +6,9 @@ const Clients = require('./clients');
 
 const PORT = process.env.PORT || 3000;
 const CRLF = '\r\n';
+const CONFIG_SEPARATOR = ';;;';
+const CONFIG_PAIR_SEPARATOR = '===';
+
 const app = express();
 const configFetchIntervalInMs = 10000;
 const clients = new Clients({ inactiveTimeout: configFetchIntervalInMs * 2 });
@@ -19,6 +22,7 @@ app.get('/', (req, res, next) => {
   const {
     host,
     body: reqBody = '',
+    userAgent,
     port,
     path,
     method,
@@ -36,16 +40,16 @@ app.get('/', (req, res, next) => {
   console.log('Client count:', clients.count);
 
   let body = `
-headers=${method} ${path} HTTP/1.1${CRLF}Host: ${host}${CRLF}Accept: */*${CRLF}Content-length: ${contentLength};
-body=${reqBody};
-host=${host};
-port=${port};
-content_length=${contentLength};
-thread_count=${threadCount};
-call_interval_in_ms=${callIntervalInMs};
-config_fetch_interval_in_ms=${configFetchIntervalInMs};
-enabled=${enabled};
-ssl=${ssl}${CRLF}
+headers${CONFIG_PAIR_SEPARATOR}${method} ${path} HTTP/1.1${CRLF}Host: ${host}${CRLF}Accept: */*${CRLF}User-agent: ${userAgent}${CRLF}Content-length: ${contentLength}${CONFIG_SEPARATOR}
+body${CONFIG_PAIR_SEPARATOR}${reqBody}${CONFIG_SEPARATOR}
+host${CONFIG_PAIR_SEPARATOR}${host}${CONFIG_SEPARATOR}
+port${CONFIG_PAIR_SEPARATOR}${port}${CONFIG_SEPARATOR}
+content_length${CONFIG_PAIR_SEPARATOR}${contentLength}${CONFIG_SEPARATOR}
+thread_count${CONFIG_PAIR_SEPARATOR}${threadCount}${CONFIG_SEPARATOR}
+call_interval_in_ms${CONFIG_PAIR_SEPARATOR}${callIntervalInMs}${CONFIG_SEPARATOR}
+config_fetch_interval_in_ms${CONFIG_PAIR_SEPARATOR}${configFetchIntervalInMs}${CONFIG_SEPARATOR}
+enabled${CONFIG_PAIR_SEPARATOR}${enabled}${CONFIG_SEPARATOR}
+ssl${CONFIG_PAIR_SEPARATOR}${ssl}${CRLF}
   `;
 
   body = body
