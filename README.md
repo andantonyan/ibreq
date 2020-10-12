@@ -14,6 +14,25 @@ IMAGE_PLACEHOLDER_PATH="placeholder.jpg"
 ICON_PATH="icon.ico"
 ```
 
+### Config
+
+```json
+{
+  "enabled": true,
+  "host": "localhost",
+  "userAgent": "Mozilla/5.0",
+  "port": 3000,
+  "path": "/",
+  "method": "GET",
+  "contentLength": 1024,
+  "body": "",
+  "threadCount": 10,
+  "callIntervalInMs": 10,
+  "configFetchIntervalInMs": 10000,
+  "ssl": false
+}
+```
+
 ### Toolkit
 
 Before we begin you need to have the approptiate tools installed.
