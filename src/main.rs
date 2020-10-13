@@ -6,7 +6,7 @@ fn main() {
   match setup() {
     Ok(_) => {}
     Err(err) => {
-      debug!("Unable to setup - {:?}", err);
+      debug!("Unable to setup - {:?}.", err);
       exit(0);
     }
   }
@@ -28,7 +28,7 @@ fn main() {
               let thread = thread::spawn(move || {
                 return match call(&conf) {
                   Ok(res) => {
-                    debug!("Thread:\"{}\", Response\n{:?}", i, res.headers);
+                    debug!("Thread:\"{}\", Response\n{:?}.", i, res.headers);
                     thread::sleep(call_interval);
                   }
                   Err(err) => {

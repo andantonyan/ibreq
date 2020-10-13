@@ -61,7 +61,7 @@ pub fn call(conf: &ControllerConfig) -> Result<Response> {
 
   stream.write_buf(&[0; 1])?;
 
-  debug!("Done calling {}...", conf.get_addr());
+  debug!("Done calling {}.", conf.get_addr());
 
   return Ok(Response::from(stream.get_res()?));
 }
