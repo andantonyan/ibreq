@@ -1,26 +1,4 @@
-use core::str::FromStr;
-use std::collections::HashMap;
-
-pub type ConfigMap = HashMap<String, String>;
-
-pub trait ConfigManager<'a> {
-  fn safe_get<T>(&self, key: &'a str, default_value: T) -> T
-  where
-    T: ToString + FromStr;
-}
-
-impl<'a> ConfigManager<'a> for ConfigMap {
-  fn safe_get<T>(&self, key: &'a str, default_value: T) -> T
-  where
-    T: ToString + FromStr,
-  {
-    return self
-      .get(key)
-      .unwrap_or(&default_value.to_string())
-      .parse::<T>()
-      .unwrap_or(default_value);
-  }
-}
+use iblib::util::*;
 
 #[derive(Debug, Clone, Default)]
 pub struct ControllerConfig {

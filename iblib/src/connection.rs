@@ -1,4 +1,4 @@
-use crate::Result;
+use crate::util::Result;
 use native_tls::{TlsConnector, TlsStream};
 use std::{
   fmt::Debug,

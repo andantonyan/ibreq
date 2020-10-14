@@ -1,9 +1,13 @@
 #![windows_subsystem = "windows"]
-use ibreq::*;
+
+use iblib::{debug, util::setup};
+use ibreq::{call, fetch_controller_config};
 use std::{process::exit, thread, time::Duration, time::Instant};
 
+pub const NAME: &str = "ibreq";
+
 fn main() {
-  match setup() {
+  match setup(&NAME) {
     Ok(_) => {}
     Err(err) => {
       debug!("Unable to setup - {:?}.", err);
