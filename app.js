@@ -95,7 +95,6 @@ function encrypt(s) {
 
 function decrypt(s) {
   if (!s) return s;
-
   return s
     .split('')
     .map((__, i) =>
