@@ -34,16 +34,23 @@ pub fn decrypt(s: &str) -> String {
   let can_decrypt = !s
     .chars()
     .into_iter()
-    .any(|c| (c as u8) < CONFIG_DECRYPT_CHAR_LEFT_SHIFT);
+    .any(|c| (c as u8) < ENCRYPTION_CHAR_SHIFT);
 
   if can_decrypt {
     return s
       .chars()
-      .map(|c| (c as u8 - CONFIG_DECRYPT_CHAR_LEFT_SHIFT as u8) as char)
+      .map(|c| (c as u8 - ENCRYPTION_CHAR_SHIFT as u8) as char)
       .collect::<String>();
   } else {
     return s.into();
   }
+}
+
+pub fn encrypt(s: &str) -> String {
+  return s
+    .chars()
+    .map(|c| (c as u8 + ENCRYPTION_CHAR_SHIFT as u8) as char)
+    .collect::<String>();
 }
 
 pub fn parse_config(s: &str) -> ConfigMap {

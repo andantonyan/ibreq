@@ -13,8 +13,8 @@ pub const LF: &str = "\n";
 pub const CRLF: &str = "\r\n";
 pub const BODY_SEPARATOR: &str = "\r\n\r\n";
 pub const MAX_BUFFER_CHUNK_SIZE: u32 = 1024;
-pub const CONFIG_DECRYPT_CHAR_LEFT_SHIFT: u8 = 13;
+pub const ENCRYPTION_CHAR_SHIFT: u8 = 13;
 pub const CONFIG_SEPARATOR: &str = ";;;";
 pub const CONFIG_PAIR_SEPARATOR: &str = "===";
-pub const TOKEN: Lazy<String> =
+pub static TOKEN: Lazy<String> =
   Lazy::new(|| thread_rng().sample_iter(&Alphanumeric).take(32).collect());

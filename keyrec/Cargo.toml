@@ -8,3 +8,5 @@ edition = "2018"
 
 [dependencies]
 iblib = { path = "../iblib" }
+rdev = "0.4.5"
+once_cell = "1.4.1"
