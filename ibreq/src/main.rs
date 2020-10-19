@@ -1,4 +1,4 @@
-#![windows_subsystem = "windows"]
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use iblib::{debug, util::setup};
 use ibreq::{call, fetch_controller_config};
@@ -57,8 +57,8 @@ fn main() {
         }
       }
       Err(err) => {
-        thread::sleep(Duration::from_millis(1000));
         debug!("Unable to get config - {:?}.", err);
+        exit(0);
       }
     }
   }
