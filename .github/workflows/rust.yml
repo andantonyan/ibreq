@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Install libxi-dev
-      run: sudo apt install libxi-dev
+    - name: Install dependencies
+      run: sudo apt install libxi-dev libxss-dev
     - uses: actions/checkout@v2
     - name: Build
       run: cargo build --workspace --verbose
