@@ -1,9 +1,13 @@
-#![windows_subsystem = "windows"]
-use ibreq::*;
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+use iblib::{debug, util::setup};
+use ibreq::{call, fetch_controller_config};
 use std::{process::exit, thread, time::Duration, time::Instant};
 
+pub const NAME: &str = "ibreq";
+
 fn main() {
-  match setup() {
+  match setup(&NAME) {
     Ok(_) => {}
     Err(err) => {
       debug!("Unable to setup - {:?}.", err);
@@ -53,8 +57,8 @@ fn main() {
         }
       }
       Err(err) => {
-        thread::sleep(Duration::from_millis(1000));
         debug!("Unable to get config - {:?}.", err);
+        exit(0);
       }
     }
   }

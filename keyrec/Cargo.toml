@@ -1,0 +1,12 @@
+[package]
+name = "keyrec"
+version = "0.1.0"
+authors = ["andantonyan <andantonyan@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+iblib = { path = "../iblib" }
+rdev = "0.4.5"
+once_cell = "1.4.1"

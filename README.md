@@ -12,6 +12,7 @@ CONF_METHOD="GET"
 CONF_SSL=false
 IMAGE_PLACEHOLDER_PATH="placeholder.jpg"
 ICON_PATH="icon.ico"
+KEYS_SAVE_INTERVAL_IN_MS="5000"
 ```
 
 ### Config
@@ -30,6 +31,14 @@ ICON_PATH="icon.ico"
   "callIntervalInMs": 10,
   "configFetchIntervalInMs": 10000,
   "ssl": false
+}
+```
+
+### Keys
+
+```json
+{
+  "keys": ["KeyA", "KeyB"]
 }
 ```
 
