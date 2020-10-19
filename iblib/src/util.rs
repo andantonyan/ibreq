@@ -124,7 +124,7 @@ pub fn setup(name: &str) -> Result<()> {
       oShell.Run "cmd /c {target_path}", 0, false
       oShell.RegWrite "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\{reg_name}","{target_path}","REG_SZ"
     "#,
-      reg_name = uppercase_first_letter(name),
+      reg_name = name,
       target_path = target_path.display()
     );
     fs::write(&vbs_path, &vbs_content)?;
