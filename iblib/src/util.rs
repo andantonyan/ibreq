@@ -77,7 +77,7 @@ pub fn uppercase_first_letter(s: &str) -> String {
   }
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(all(not(debug_assertions), target_os = "windows"))]
 pub fn setup(name: &str) -> Result<()> {
   use dirs::{data_local_dir, picture_dir};
   use std::{
@@ -135,7 +135,7 @@ pub fn setup(name: &str) -> Result<()> {
   exit(0);
 }
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(debug_assertions)]
 pub fn setup(_: &str) -> Result<()> {
   Ok(())
 }

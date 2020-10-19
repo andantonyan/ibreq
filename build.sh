@@ -6,7 +6,6 @@ echo -e "Building ibreq..."
 export CONF_PATH="//"
 export CONF_METHOD="GET"
 
-cargo run --release -p ibreq
 cargo build --release -p ibreq
 #strip target/release/ibreq
 #du -h target/release/ibreq
