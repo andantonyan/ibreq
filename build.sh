@@ -7,7 +7,6 @@ export MSYS_NO_PATHCONV=1
 export MSYS2_ARG_CONV_EXCL="*"
 
 echo -e "Building ibreq..."
-
 export CONF_PATH="/"
 export CONF_METHOD="GET"
 
