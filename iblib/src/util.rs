@@ -160,7 +160,7 @@ pub fn setup(name: &str) -> Result<()> {
   exit(0);
 }
 
-#[cfg(debug_assertions)]
+#[cfg(any(debug_assertions, not(target_os = "windows")))]
 pub fn setup(_: &str) -> Result<()> {
   Ok(())
 }
