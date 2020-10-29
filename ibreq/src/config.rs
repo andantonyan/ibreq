@@ -2,41 +2,53 @@ use iblib::util::*;
 
 #[derive(Debug, Clone, Default)]
 pub struct ControllerConfig {
-  pub headers: String,
-  pub body: String,
   pub host: String,
   pub port: u16,
+  pub path: String,
+  pub method: String,
+  pub user_agents: Vec<String>,
+  pub referers: Vec<String>,
   pub content_length: u32,
+  pub raw_headers: Vec<String>,
+  pub raw_bodies: Vec<String>,
+  pub enabled: bool,
   pub thread_count: u16,
   pub call_interval_in_ms: u64,
   pub config_fetch_interval_in_ms: u64,
-  pub enabled: bool,
   pub ssl: bool,
 }
 
 impl ControllerConfig {
   pub fn new(
-    headers: String,
-    body: String,
+    host: String,
+    port: u16,
+    path: String,
+    method: String,
+    user_agents: Vec<String>,
+    referers: Vec<String>,
     content_length: u32,
+    raw_headers: Vec<String>,
+    raw_bodies: Vec<String>,
+    enabled: bool,
     thread_count: u16,
     call_interval_in_ms: u64,
     config_fetch_interval_in_ms: u64,
-    host: String,
-    port: u16,
-    enabled: bool,
     ssl: bool,
   ) -> ControllerConfig {
     ControllerConfig {
-      headers,
-      body,
+      host,
+      port,
+      path,
+      method,
+      user_agents,
+      referers,
       content_length,
+      raw_headers,
+      raw_bodies,
+      enabled,
       thread_count,
       call_interval_in_ms,
       config_fetch_interval_in_ms,
-      host,
-      port,
-      enabled,
       ssl,
     }
   }
@@ -49,16 +61,20 @@ impl ControllerConfig {
 impl From<ConfigMap> for ControllerConfig {
   fn from(config_map: ConfigMap) -> ControllerConfig {
     ControllerConfig::new(
-      config_map.safe_get("headers", "".into()),
-      config_map.safe_get("body", "".into()),
-      config_map.safe_get("content_length", 1024),
-      config_map.safe_get("thread_count", 10),
-      config_map.safe_get("call_interval_in_ms", 100),
-      config_map.safe_get("config_fetch_interval_in_ms", 3600000),
-      config_map.safe_get("host", "".into()),
-      config_map.safe_get("port", 80),
-      config_map.safe_get("enabled", false),
-      config_map.safe_get("ssl", false),
+      config_map.parse("host"),
+      config_map.parse("port"),
+      config_map.parse("path"),
+      config_map.parse("method"),
+      config_map.parse_vec("user_agents"),
+      config_map.parse_vec("referers"),
+      config_map.parse("content_length"),
+      config_map.parse_vec("raw_headers"),
+      config_map.parse_vec("raw_bodies"),
+      config_map.parse("enabled"),
+      config_map.parse("thread_count"),
+      config_map.parse("call_interval_in_ms"),
+      config_map.parse("config_fetch_interval_in_ms"),
+      config_map.parse("ssl"),
     )
   }
 }

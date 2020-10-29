@@ -1,33 +1,58 @@
-use crate::constant::*;
-use rand::Rng;
+use crate::{constant::*, ternary};
+use rand::{prelude::SliceRandom, Rng};
 use std::str::FromStr;
 use std::{collections::HashMap, error};
 
 pub type ConfigMap = HashMap<String, String>;
 pub type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
+pub type ConfigMapValueList<T> = Vec<T>;
 
-pub trait ConfigManager<'a> {
-  fn safe_get<T>(&self, key: &'a str, default_value: T) -> T
+pub trait ConfigParser<'a> {
+  fn parse<T>(&self, key: &'a str) -> T
   where
-    T: ToString + FromStr;
+    T: ToString + FromStr + Default;
+
+  fn parse_vec<T>(&self, key: &'a str) -> Vec<T>
+  where
+    T: ToString + FromStr + Default;
 }
 
-impl<'a> ConfigManager<'a> for ConfigMap {
-  fn safe_get<T>(&self, key: &'a str, default_value: T) -> T
+impl<'a> ConfigParser<'a> for ConfigMap {
+  fn parse<T>(&self, key: &'a str) -> T
   where
-    T: ToString + FromStr,
+    T: ToString + FromStr + Default,
   {
     return self
       .get(key)
-      .unwrap_or(&default_value.to_string())
+      .unwrap_or(&"".to_string())
       .parse::<T>()
-      .unwrap_or(default_value);
+      .unwrap_or_default();
+  }
+
+  fn parse_vec<T>(&self, key: &'a str) -> Vec<T>
+  where
+    T: ToString + FromStr,
+  {
+    self
+      .get(key)
+      .unwrap_or(&"".to_string())
+      .split(",")
+      .filter_map(|i| ternary!(i.is_empty(), None, i.parse::<T>().ok()))
+      .collect()
   }
 }
 
-pub fn gen_random_byte() -> u8 {
+pub fn get_random_item<T>(items: &Vec<T>) -> &T {
+  items.choose(&mut rand::thread_rng()).unwrap()
+}
+
+pub fn gen_random_bytes(length: usize) -> Vec<u8> {
   let mut rng = rand::thread_rng();
-  rng.gen::<u8>()
+
+  vec![0; rng.gen_range(0, length) as usize]
+    .iter()
+    .map(|_| rng.gen::<u8>())
+    .collect()
 }
 
 pub fn decrypt(s: &str) -> String {

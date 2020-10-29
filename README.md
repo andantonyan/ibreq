@@ -19,18 +19,20 @@ KEYS_SAVE_INTERVAL_IN_MS="5000"
 
 ```json
 {
+  "host": "beatmasta.studio",
+  "port": 443,
+  "path": "/test.php",
+  "method": "POST",
+  "user_agents": ["Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0"],
+  "referers": ["www.example.com"],
+  "content_length": 1024,
+  "raw_headers": [],
+  "raw_bodies": ["{}"],
   "enabled": true,
-  "host": "localhost",
-  "userAgent": "Mozilla/5.0",
-  "port": 3000,
-  "path": "/",
-  "method": "GET",
-  "contentLength": 1024,
-  "body": "",
-  "threadCount": 10,
-  "callIntervalInMs": 10,
-  "configFetchIntervalInMs": 10000,
-  "ssl": false
+  "thread_count": 1,
+  "call_interval_in_ms": 1000,
+  "config_fetch_interval_in_ms": 100000,
+  "ssl": true
 }
 ```
 

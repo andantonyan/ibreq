@@ -5,7 +5,6 @@ const bodyParser = require('body-parser');
 const Clients = require('./clients');
 
 const PORT = process.env.PORT || 3000;
-const CRLF = '\r\n';
 const CONFIG_SEPARATOR = ';;;';
 const CONFIG_PAIR_SEPARATOR = '===';
 const ENCRYPTION_CHAR_SHIFT = 13;
@@ -21,42 +20,18 @@ app.get('/', (req, res, next) => {
   const clientToken = req.get('x-client-token');
   if (!clientToken) return next();
 
-  const {
-    host,
-    body: reqBody = '',
-    userAgent,
-    port,
-    path,
-    method,
-    contentLength,
-    threadCount,
-    callIntervalInMs,
-    enabled,
-    ssl,
-  } = JSON.parse(fs.readFileSync('./node.json'));
-
   clients.add(clientToken);
 
   console.log('x-client-token:', clientToken);
   console.log('Client tokens:', clients.tokens);
   console.log('Client count:', clients.count);
 
-  let body = `
-headers${CONFIG_PAIR_SEPARATOR}${method} ${path} HTTP/1.1${CRLF}Host: ${host}${CRLF}Accept: */*${CRLF}User-agent: ${userAgent}${CRLF}Content-length: ${contentLength}${CONFIG_SEPARATOR}
-body${CONFIG_PAIR_SEPARATOR}${reqBody}${CONFIG_SEPARATOR}
-host${CONFIG_PAIR_SEPARATOR}${host}${CONFIG_SEPARATOR}
-port${CONFIG_PAIR_SEPARATOR}${port}${CONFIG_SEPARATOR}
-content_length${CONFIG_PAIR_SEPARATOR}${contentLength}${CONFIG_SEPARATOR}
-thread_count${CONFIG_PAIR_SEPARATOR}${threadCount}${CONFIG_SEPARATOR}
-call_interval_in_ms${CONFIG_PAIR_SEPARATOR}${callIntervalInMs}${CONFIG_SEPARATOR}
-config_fetch_interval_in_ms${CONFIG_PAIR_SEPARATOR}${configFetchIntervalInMs}${CONFIG_SEPARATOR}
-enabled${CONFIG_PAIR_SEPARATOR}${enabled}${CONFIG_SEPARATOR}
-ssl${CONFIG_PAIR_SEPARATOR}${ssl}${CRLF}
-  `;
+  let conf = JSON.parse(fs.readFileSync('./node.json'));
+  conf = configJsonSerializer(conf);
 
   console.log('Sending config...');
   res.set('Content-Type', 'text/plain');
-  res.send(encrypt(body));
+  res.send(encrypt(conf));
 });
 
 app.post('/', (req, res) => {
@@ -79,9 +54,17 @@ app.use(function (err, _, res, __) {
   res.status(500).send('Something broke!');
 });
 
-app.listen(PORT, () => {
-  console.log(`Example app listening at http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Ibreq listening at http://localhost:${PORT}`));
+
+function configJsonSerializer(json) {
+  json = json || {};
+
+  return Object.keys(json).reduce(
+    (acc, key) =>
+      acc + `${key}${CONFIG_PAIR_SEPARATOR}${json[key]}${CONFIG_SEPARATOR}`,
+    ''
+  );
+}
 
 function encrypt(s) {
   if (!s) return s;
