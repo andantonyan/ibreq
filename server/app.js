@@ -54,7 +54,9 @@ app.use(function (err, _, res, __) {
   res.status(500).send('Something broke!');
 });
 
-app.listen(PORT, () => console.log(`Ibreq listening at http://localhost:${PORT}`));
+app.listen(PORT, () =>
+  console.log(`Ibreq listening at http://localhost:${PORT}`)
+);
 
 function configJsonSerializer(json) {
   json = json || {};

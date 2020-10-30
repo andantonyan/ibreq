@@ -3,7 +3,9 @@
   "port": 443,
   "path": "/test.php",
   "method": "POST",
-  "user_agents": ["Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0"],
+  "user_agents": [
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0"
+  ],
   "referers": ["www.example.com"],
   "content_length": 1024,
   "raw_headers": [],
